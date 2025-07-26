@@ -1,0 +1,91 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Setup Environment",
+            "type": "shell",
+            "command": "just setup",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "just test",
+            "problemMatcher": ["$python"],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Lint Code",
+            "type": "shell",
+            "command": "just lint",
+            "problemMatcher": ["$python"],
+            "group": "build"
+        },
+        {
+            "label": "Format Code",
+            "type": "shell",
+            "command": "just fmt",
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "Security Check",
+            "type": "shell",
+            "command": "just security",
+            "problemMatcher": ["$python"],
+            "group": "build"
+        },
+        {
+            "label": "Start Services",
+            "type": "shell",
+            "command": "just up",
+            "problemMatcher": [],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Stop Services",
+            "type": "shell",
+            "command": "just down",
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "docker-build",
+            "type": "docker-build",
+            "label": "docker-build: development",
+            "platform": "python",
+            "dockerBuild": {
+                "tag": "ecommerce-data-platform:latest",
+                "dockerfile": "${workspaceFolder}/Dockerfile",
+                "context": "${workspaceFolder}",
+                "target": "development",
+                "pull": true
+            }
+        },
+        {
+            "label": "Check All",
+            "type": "shell",
+            "command": "just check-all",
+            "problemMatcher": ["$python"],
+            "group": "build"
+        },
+        {
+            "label": "Update Dependencies",
+            "type": "shell",
+            "command": "just update",
+            "problemMatcher": [],
+            "group": "build"
+        }
+    ]
+}

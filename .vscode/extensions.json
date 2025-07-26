@@ -1,0 +1,51 @@
+{
+    "recommendations": [
+        // Python - Ruff replaces many traditional linters
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.mypy-type-checker",
+        
+        // Modern Python tools
+        "tamasfe.even-better-toml",
+        
+        // Docker
+        "ms-azuretools.vscode-docker",
+        
+        // Git
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        
+        // AWS
+        "amazonwebservices.aws-toolkit-vscode",
+        
+        // Terraform
+        "hashicorp.terraform",
+        
+        // Database
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        
+        // Markdown
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        
+        // YAML/JSON
+        "redhat.vscode-yaml",
+        "esbenp.prettier-vscode",
+        
+        // General productivity
+        "streetsidesoftware.code-spell-checker",
+        "wayou.vscode-todo-highlight",
+        "gruntfuggly.todo-tree",
+        
+        // Testing
+        "littlefoxteam.vscode-python-test-adapter",
+        
+        // Environment
+        "mikestead.dotenv",
+        
+        // Just task runner
+        "skellock.just"
+    ]
+}

@@ -1,0 +1,48 @@
+[sqlfluff]
+dialect = postgres
+templater = dbt
+exclude_rules = L003,L018
+
+[sqlfluff:indentation]
+indent_unit = space
+tab_space_size = 4
+indented_joins = false
+indented_ctes = false
+indented_using_on = true
+template_blocks_indent = true
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+line_position = trailing
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:ambiguous.join]
+fully_qualify_join_types = outer
+
+[sqlfluff:rules:ambiguous.column_references]
+group_by_and_order_by_style = explicit
+
+[sqlfluff:templater:dbt]
+project_dir = ./
+profiles_dir = ./profiles
+profile = ecommerce_data_platform
+
+[sqlfluff:rules:convention.select_trailing_comma]
+select_clause_trailing_comma = forbid
+
+[sqlfluff:rules:structure.subquery]
+forbid_subquery_in = both
+
+[sqlfluff:rules:references.special_chars]
+unquoted_identifiers_policy = all

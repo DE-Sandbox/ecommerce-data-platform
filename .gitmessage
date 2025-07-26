@@ -1,0 +1,26 @@
+# <type>: <subject> (max 50 chars)
+
+# <body> (optional, wrap at 72 chars)
+
+# <footer> (optional)
+
+# Type can be:
+#   feat     : new feature
+#   fix      : bug fix  
+#   docs     : documentation only
+#   style    : formatting, missing semicolons, etc (no code change)
+#   refactor : code change that neither fixes a bug nor adds a feature
+#   perf     : code change that improves performance
+#   test     : adding missing tests
+#   chore    : maintain (updating grunt tasks etc, no code change)
+#   build    : changes to build process
+#   ci       : changes to CI configuration
+
+# Example:
+# feat: add customer order tracking API
+#
+# - Implement REST endpoints for order status
+# - Add database migrations for order history
+# - Include comprehensive test coverage
+#
+# Closes #123

@@ -1,0 +1,82 @@
+#!/bin/bash
+# Pre-push hook for security and quality checks
+
+echo "🔐 Running pre-push security checks..."
+
+# Ensure we're in the project root
+cd "$(git rev-parse --show-toplevel)"
+
+# Export PATH to ensure UV is available
+export PATH="$HOME/.local/bin:$PATH"
+
+# Check for secrets in staged files
+echo "🔍 Checking for secrets..."
+if command -v trufflehog &> /dev/null; then
+    trufflehog git file://. --since-commit HEAD --only-verified --fail
+    if [ $? -ne 0 ]; then
+        echo "❌ Secrets detected! Push aborted."
+        exit 1
+    fi
+fi
+
+# Check for AWS credentials
+echo "🔍 Checking for AWS credentials..."
+git diff --cached --name-only | while read file; do
+    if [ -f "$file" ]; then
+        if grep -qE "(AKIA[0-9A-Z]{16}|aws_access_key_id|aws_secret_access_key)" "$file"; then
+            echo "❌ AWS credentials detected in $file! Push aborted."
+            exit 1
+        fi
+    fi
+done
+
+# Run security scan with bandit
+echo "🔐 Running Bandit security scan..."
+if [ -f ".venv/bin/bandit" ]; then
+    uv run bandit -r src/ -ll
+    if [ $? -ne 0 ]; then
+        echo "❌ Security issues detected! Push aborted."
+        echo "💡 Run 'just security' to see details"
+        exit 1
+    fi
+fi
+
+# Check for large files
+echo "📦 Checking for large files..."
+git diff --cached --name-only | while read file; do
+    if [ -f "$file" ]; then
+        size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
+        if [ "$size" -gt 10485760 ]; then  # 10MB
+            echo "❌ Large file detected: $file ($(($size/1048576))MB)"
+            echo "💡 Consider using Git LFS for large files"
+            exit 1
+        fi
+    fi
+done
+
+# Run quick lint check
+echo "🔍 Running quick lint check..."
+if [ -f ".venv/bin/ruff" ]; then
+    uv run ruff check src/ tests/ --exit-non-zero-on-fix
+    if [ $? -ne 0 ]; then
+        echo "❌ Linting issues detected! Push aborted."
+        echo "💡 Run 'just lint' to see issues or 'just fmt' to fix"
+        exit 1
+    fi
+fi
+
+# Check commit messages
+echo "📝 Checking commit messages..."
+commits=$(git log origin/main..HEAD --format="%s")
+if [ -n "$commits" ]; then
+    echo "$commits" | while read -r commit; do
+        if ! echo "$commit" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|chore|build|ci):'; then
+            echo "❌ Invalid commit message format: $commit"
+            echo "💡 Use format: <type>: <subject>"
+            echo "   Types: feat, fix, docs, style, refactor, perf, test, chore, build, ci"
+            exit 1
+        fi
+    done
+fi
+
+echo "✅ All pre-push checks passed!"

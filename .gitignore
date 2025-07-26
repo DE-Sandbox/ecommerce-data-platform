@@ -1,3 +1,11 @@
+# Environment files
+.env
+.env.local
+*.env
+
+# UV cache
+.cache/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -25,6 +33,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+ecommerce_data_platform.egg-info/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -187,6 +196,7 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file. However, if you prefer, 
 #  you could uncomment the following to ignore the entire vscode folder
 # .vscode/
+# Note: We're tracking .vscode/ for project-specific settings
 
 # Ruff stuff:
 .ruff_cache/

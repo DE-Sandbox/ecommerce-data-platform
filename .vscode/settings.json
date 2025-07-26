@@ -1,0 +1,124 @@
+{
+    // Python configuration
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    
+    // Ruff - Ultra-fast Python linter and formatter
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "ruff.enable": true,
+    "ruff.lint.enable": true,
+    "ruff.format.enable": true,
+    "ruff.organizeImports": true,
+    "ruff.fixAll": true,
+    "ruff.path": ["${workspaceFolder}/.venv/bin/ruff"],
+    "ruff.interpreter": ["${workspaceFolder}/.venv/bin/python"],
+    
+    // Disable other Python linters in favor of Ruff
+    "python.linting.enabled": false,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+    "python.linting.mypyEnabled": false,
+    "python.linting.banditEnabled": false,
+    "python.formatting.provider": "none",
+    
+    // Type checking with mypy
+    "mypy-type-checker.path": ["${workspaceFolder}/.venv/bin/mypy"],
+    "mypy-type-checker.interpreter": ["${workspaceFolder}/.venv/bin/python"],
+    
+    // Editor settings
+    "editor.rulers": [88],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    
+    // Files to exclude
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/htmlcov": true,
+        "**/.coverage": true
+    },
+    
+    // Test configuration
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest",
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    
+    // Terminal configuration
+    "terminal.integrated.env.linux": {
+        "PATH": "${env:HOME}/.local/bin:${env:PATH}"
+    },
+    "terminal.integrated.env.osx": {
+        "PATH": "${env:HOME}/.local/bin:${env:PATH}"
+    },
+    
+    // Git configuration for trunk-based development
+    "git.branchProtection": ["main"],
+    "git.pruneOnFetch": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    
+    // Docker configuration
+    "docker.languageserver.formatter.ignoreMultilineInstructions": false,
+    
+    // JSON/YAML formatting
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[toml]": {
+        "editor.formatOnSave": true
+    },
+    
+    // Markdown settings
+    "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": true,
+            "strings": true
+        }
+    },
+    
+    // SQL formatting with sqlfluff
+    "[sql]": {
+        "editor.formatOnSave": false
+    },
+    
+    // Modern tool integrations
+    "mise.configPath": "${workspaceFolder}/.mise.toml",
+    
+    // Environment variables
+    "terminal.integrated.env.windows": {},
+    "python.envFile": "${workspaceFolder}/.env.local",
+    
+    // Auto-save
+    "files.autoSave": "onFocusChange",
+    
+    // Better search
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.venv": true,
+        "**/.git": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.cache": true,
+        "**/uv.lock": true
+    }
+}

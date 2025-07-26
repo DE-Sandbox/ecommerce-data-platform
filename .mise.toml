@@ -1,0 +1,22 @@
+[tools]
+python = "3.13"
+node = "20"         # For dbt docs and other tooling
+terraform = "1.9"   # Latest stable
+aws-cli = "latest"
+
+[env]
+# UV Configuration
+UV_CACHE_DIR = ".cache/uv"
+UV_PYTHON = "3.13"
+
+# Docker Configuration
+DOCKER_BUILDKIT = "1"
+COMPOSE_DOCKER_CLI_BUILD = "1"
+
+# LocalStack Configuration
+LOCALSTACK_HOST = "localhost.localstack.cloud"
+AWS_ENDPOINT_URL = "http://localhost:4566"
+DEFAULT_REGION = "us-east-1"
+
+# Project paths
+PROJECT_ROOT = "{{env.PWD}}"
