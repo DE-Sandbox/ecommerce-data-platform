@@ -63,6 +63,17 @@ security:
     export PATH="$HOME/.local/bin:$PATH" && uv run pip-audit
     @echo "✅ Security scan complete"
 
+# Docker security scan
+docker-security image="ecommerce-data-platform:latest":
+    @echo "🐳 Running Docker security scan..."
+    ./scripts/docker-security-scan.sh {{image}}
+
+# Build Docker image
+docker-build target="production":
+    @echo "🔨 Building Docker image ({{target}} stage)..."
+    docker build --target {{target}} -t ecommerce-data-platform:{{target}} .
+    @echo "✅ Image built: ecommerce-data-platform:{{target}}"
+
 # Clean everything
 clean:
     @echo "🧹 Cleaning up..."
@@ -150,3 +161,24 @@ done:
 # Complete development workflow check
 check-all: lint test security
     @echo "✅ All checks passed!"
+
+# Terraform commands for LocalStack
+tf-init:
+    ./scripts/tf-local.sh init
+
+tf-plan:
+    ./scripts/tf-local.sh plan
+
+tf-apply:
+    ./scripts/tf-local.sh apply
+
+tf-destroy:
+    ./scripts/tf-local.sh destroy
+
+# Full infrastructure setup
+infra-up: up tf-apply
+    @echo "✅ Infrastructure ready!"
+
+# Full infrastructure teardown
+infra-down: tf-destroy down
+    @echo "🧹 Infrastructure cleaned up!"

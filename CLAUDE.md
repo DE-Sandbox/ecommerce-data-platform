@@ -1,6 +1,24 @@
-caw# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Working Directory Guidelines
+
+**ALWAYS work from the project root directory unless specifically required otherwise:**
+- Default working directory: `<project-root>` (where this CLAUDE.md file is located)
+- Return to root directory after any subdirectory operations
+- Use relative paths from project root in commands and documentation
+- Only change to subdirectories when explicitly needed for specific operations
+
+**Directory change examples:**
+```bash
+# ✅ Good: Run commands from project root
+just tf-apply
+uv run ruff check src/
+
+# ❌ Avoid: Working from subdirectories unless necessary  
+cd terraform/environments/local && terraform apply
+```
 
 ## Core Development Principles
 

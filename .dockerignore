@@ -1,0 +1,73 @@
+# Git files
+.git/
+.gitignore
+.gitmessage
+
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+*.cover
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+roadmap/
+*.md
+!README.md
+
+# Development files
+.pre-commit-config.yaml
+.editorconfig
+justfile
+docker-compose.yml
+Dockerfile
+
+# Test files
+tests/
+conftest.py
+
+# CI/CD
+.github/
+
+# LocalStack
+.localstack/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Security - never include these
+.env.local
+*.pem
+*.key
+*.cert
+credentials*
+secrets*

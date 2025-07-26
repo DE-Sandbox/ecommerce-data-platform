@@ -8,18 +8,27 @@ services:
       - "4566:4566"
       - "4510-4559:4510-4559"
     environment:
-      - SERVICES=s3,dynamodb,sns,sqs,secretsmanager,iam,lambda,kinesis
+      # Comprehensive AWS services for data platform
+      - SERVICES=s3,dynamodb,sns,sqs,secretsmanager,iam,lambda,kinesis,firehose,glue,athena,redshift,emr,cloudwatch,events,stepfunctions,ec2,rds,elasticache,ses
       - DEBUG=${DEBUG:-0}
       - DATA_DIR=${DATA_DIR:-/tmp/localstack/data}
       - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR:-docker}
       - HOST_TMP_FOLDER=${TMPDIR:-/tmp/localstack}
       - DOCKER_HOST=unix:///var/run/docker.sock
       - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+      - PERSISTENCE=${PERSISTENCE:-1}  # Enable persistence
+      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=60
     volumes:
       - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - localstack_data:/var/lib/localstack
     networks:
       - ecommerce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   postgres:
     container_name: postgres
@@ -40,9 +49,130 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redpanda (Kafka-compatible streaming)
+  redpanda:
+    container_name: redpanda
+    image: redpandadata/redpanda:latest
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --smp 1
+      - --memory 1G
+      - --mode dev-container
+    ports:
+      - "18081:18081"  # Schema Registry
+      - "18082:18082"  # Pandaproxy
+      - "19092:19092"  # Kafka API
+      - "19644:9644"   # Prometheus metrics
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO (S3-compatible object storage for testing)
+  minio:
+    container_name: minio
+    image: quay.io/minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # Dagster for orchestration
+  dagster_webserver:
+    container_name: dagster_webserver
+    image: dagster/dagster-k8s:latest
+    entrypoint:
+      - dagster-webserver
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "3000"
+      - -w
+      - workspace.yaml
+    ports:
+      - "3000:3000"
+    environment:
+      DAGSTER_POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      DAGSTER_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB:-dagster}
+      DAGSTER_POSTGRES_HOST: postgres
+      DAGSTER_POSTGRES_PORT: 5432
+    volumes:
+      - ./src/pipelines:/opt/dagster/app
+    networks:
+      - ecommerce-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  dagster_daemon:
+    container_name: dagster_daemon
+    image: dagster/dagster-k8s:latest
+    entrypoint:
+      - dagster-daemon
+      - run
+    environment:
+      DAGSTER_POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      DAGSTER_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB:-dagster}
+      DAGSTER_POSTGRES_HOST: postgres
+      DAGSTER_POSTGRES_PORT: 5432
+    volumes:
+      - ./src/pipelines:/opt/dagster/app
+    networks:
+      - ecommerce-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 networks:
   ecommerce-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  localstack_data:
+  redpanda_data:
+  redis_data:
+  minio_data:

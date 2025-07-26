@@ -1,20 +1,33 @@
 # Multi-stage build for optimal performance and security
-FROM python:3.13-slim-bookworm AS base
+# Security scanning: docker scout cves <image>
+ARG PYTHON_VERSION=3.13
+
+# Base stage with minimal dependencies
+FROM python:${PYTHON_VERSION}-slim-bookworm AS base
+
+# Security: Run as non-root from the start where possible
+ARG UID=1000
+ARG GID=1000
 
 # Install system dependencies and UV (10-100x faster than pip)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    build-essential \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && apt-get purge -y --auto-remove curl
 
 # Add UV to PATH
-ENV PATH="/root/.cargo/bin:$PATH"
+ENV PATH="/root/.cargo/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_SYSTEM_PYTHON=1 \
+    UV_NO_CACHE=1
 
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files
+# Copy dependency files only
 COPY pyproject.toml uv.lock* ./
 
 # Build stage - install all dependencies including dev tools
