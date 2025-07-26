@@ -20,6 +20,14 @@ uv run ruff check src/
 cd terraform/environments/local && terraform apply
 ```
 
+## Git Commit Guidelines
+
+**NEVER include AI attribution in commit messages:**
+- ❌ Do NOT add "Generated with Claude Code" or similar
+- ❌ Do NOT add "Co-Authored-By: Claude" lines
+- ✅ Write clean, professional commit messages focused on the changes
+- ✅ Use conventional commit format when appropriate
+
 ## Core Development Principles
 
 ### 1. Test-Driven Development (TDD)
