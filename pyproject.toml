@@ -33,6 +33,7 @@ dev = [
     "sqlfluff>=3.2.0",
     "yamllint>=1.35.0",
     "ruff>=0.8.0",
+    "pip-audit>=2.8.0",
 ]
 
 [tool.black]
@@ -88,6 +89,8 @@ ignore_missing_imports = true
 [tool.ruff]
 target-version = "py313"
 line-length = 88
+
+[tool.ruff.lint]
 select = [
     "ALL",  # Enable all available rules
 ]
@@ -112,7 +115,7 @@ ignore = [
     "S101",   # assert
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "PLR2004", "SLF001"]  # Allow assert, magic values, private access in tests
 "scripts/*" = ["T201"]  # Allow print in scripts
 
