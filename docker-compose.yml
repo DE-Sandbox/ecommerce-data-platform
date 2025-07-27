@@ -40,7 +40,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./sql/schema/001_initial_schema.sql:/docker-entrypoint-initdb.d/001_initial_schema.sql
+      - ./docker/postgres/init_dependencies.sql:/docker-entrypoint-initdb.d/init_dependencies.sql
     networks:
       - ecommerce-network
     healthcheck:
