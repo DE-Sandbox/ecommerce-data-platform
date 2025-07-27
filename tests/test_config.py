@@ -70,7 +70,7 @@ class TestConfigLoader:
     def test_database_url_generation(self) -> None:
         """Test database URL generation."""
         url = get_database_url("development")
-        assert url == "postgresql://postgres:postgres@localhost:5432/ecommerce"
+        assert url == "postgresql://postgres:postgres@localhost:5432/ecommerce"  # pragma: allowlist secret
 
     def test_feature_flags(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test feature flag checking."""
