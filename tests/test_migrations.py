@@ -16,6 +16,7 @@ class TestMigrationCommands:
             capture_output=True,
             text=True,
             check=False,
+            timeout=30,
         )
 
         # Should not error
@@ -30,6 +31,7 @@ class TestMigrationCommands:
             capture_output=True,
             text=True,
             check=False,
+            timeout=30,
         )
 
         # The check might fail if models don't match migrations exactly,
@@ -88,6 +90,7 @@ class TestMigrationCommands:
             capture_output=True,
             text=True,
             check=False,
+            timeout=30,
         )
 
         # Should generate SQL

@@ -26,6 +26,8 @@ async def async_session(async_engine):
     async with async_session_maker() as session:
         # Start a transaction
         async with session.begin():
-            yield session
-            # Rollback the transaction after each test
-            await session.rollback()
+            try:
+                yield session
+            finally:
+                # Rollback the transaction after each test
+                await session.rollback()
