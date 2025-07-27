@@ -61,8 +61,9 @@ def ensure_database_ready() -> Generator[None]:
     while time.time() - start_time < max_wait:
         result = subprocess.run(
             ["docker-compose", "ps", "postgres"],  # noqa: S607
-            check=False, capture_output=True,
-            text=True
+            check=False,
+            capture_output=True,
+            text=True,
         )
         if "healthy" in result.stdout:
             # PostgreSQL is ready

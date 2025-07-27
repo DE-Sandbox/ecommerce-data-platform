@@ -28,7 +28,9 @@ class TestConfigLoader:
         schema_names = [s["name"] for s in config["schema"]["schemas"]]
         assert schema_names == ["ecommerce", "audit", "archive"]
 
-    def test_environment_variable_substitution(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_environment_variable_substitution(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that environment variables are properly substituted."""
         # Set test environment variables
         monkeypatch.setenv("DB_HOST", "test-host")
@@ -154,7 +156,9 @@ class TestConfigValidation:
         loader.validate_required_fields("database", required_fields)
 
         # Test with missing field - should fail
-        with pytest.raises(ConfigValidationError, match="Missing required field: api_key"):
+        with pytest.raises(
+            ConfigValidationError, match="Missing required field: api_key"
+        ):
             loader.validate_required_fields("database", [*required_fields, "api_key"])
 
     def test_validate_field_types(self) -> None:
@@ -162,12 +166,7 @@ class TestConfigValidation:
         loader = ConfigLoader()
 
         # Define expected types
-        field_types = {
-            "port": int,
-            "host": str,
-            "ssl_mode": str,
-            "pool_size": int
-        }
+        field_types = {"port": int, "host": str, "ssl_mode": str, "pool_size": int}
 
         # This should validate types correctly
         config = loader.load("database", "test")
@@ -177,7 +176,9 @@ class TestConfigValidation:
 
         # Should raise for invalid type
         bad_config = {"port": "not-a-number"}
-        with pytest.raises(ConfigValidationError, match="Invalid type for field 'port'"):
+        with pytest.raises(
+            ConfigValidationError, match="Invalid type for field 'port'"
+        ):
             loader.validate_field_types(bad_config, field_types)
 
     def test_validate_port_range(self) -> None:
@@ -188,10 +189,14 @@ class TestConfigValidation:
         loader.validate_port(5432)
 
         # Invalid ports
-        with pytest.raises(ConfigValidationError, match="Port must be between 1 and 65535"):
+        with pytest.raises(
+            ConfigValidationError, match="Port must be between 1 and 65535"
+        ):
             loader.validate_port(0)
 
-        with pytest.raises(ConfigValidationError, match="Port must be between 1 and 65535"):
+        with pytest.raises(
+            ConfigValidationError, match="Port must be between 1 and 65535"
+        ):
             loader.validate_port(70000)
 
     def test_validate_enum_fields(self) -> None:
@@ -205,6 +210,8 @@ class TestConfigValidation:
         loader.validate_enum("environment", "development", valid_environments)
 
         # Should fail for invalid value
-        with pytest.raises(ConfigValidationError, match="Invalid value 'staging' for field 'environment'"):
+        with pytest.raises(
+            ConfigValidationError,
+            match="Invalid value 'staging' for field 'environment'",
+        ):
             loader.validate_enum("environment", "staging", valid_environments)
-

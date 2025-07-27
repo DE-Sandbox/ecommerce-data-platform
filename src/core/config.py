@@ -12,7 +12,9 @@ from typing import Final
 import yaml
 
 # Type definitions for configuration values
-type ConfigValue = str | int | float | bool | list[ConfigValue] | dict[str, ConfigValue] | None
+type ConfigValue = (
+    str | int | float | bool | list[ConfigValue] | dict[str, ConfigValue] | None
+)
 type ConfigDict = dict[str, ConfigValue]
 
 # Constants
@@ -22,7 +24,6 @@ MIN_PORT: Final[int] = 1
 
 class ConfigValidationError(Exception):
     """Raised when configuration validation fails."""
-
 
 
 class ConfigLoader:
@@ -124,7 +125,13 @@ class ConfigLoader:
 
         # Add non-environment sections
         for key, value in config.items():
-            if key not in ["default", "development", "test", "production", "localstack"]:
+            if key not in [
+                "default",
+                "development",
+                "test",
+                "production",
+                "localstack",
+            ]:
                 result[key] = value
 
         # Substitute environment variables
@@ -135,7 +142,9 @@ class ConfigLoader:
 
         return result  # type: ignore[return-value]
 
-    def get(self, config_name: str, key_path: str, default: ConfigValue = None) -> ConfigValue:
+    def get(
+        self, config_name: str, key_path: str, default: ConfigValue = None
+    ) -> ConfigValue:
         """Get a specific configuration value using dot notation.
 
         Args:
@@ -164,7 +173,9 @@ class ConfigLoader:
         """Clear configuration cache to force reload."""
         self._cache.clear()
 
-    def validate_required_fields(self, config_name: str, required_fields: list[str]) -> None:
+    def validate_required_fields(
+        self, config_name: str, required_fields: list[str]
+    ) -> None:
         """Validate that all required fields are present in configuration.
 
         Args:
@@ -181,7 +192,9 @@ class ConfigLoader:
                 msg = f"Missing required field: {field}"
                 raise ConfigValidationError(msg)
 
-    def validate_field_types(self, config: ConfigDict, field_types: dict[str, type]) -> None:
+    def validate_field_types(
+        self, config: ConfigDict, field_types: dict[str, type]
+    ) -> None:
         """Validate that fields have correct types.
 
         Args:
@@ -217,7 +230,9 @@ class ConfigLoader:
             msg = f"Port must be between {MIN_PORT} and {MAX_PORT}"
             raise ConfigValidationError(msg)
 
-    def validate_enum(self, field_name: str, value: str, valid_values: list[str]) -> None:
+    def validate_enum(
+        self, field_name: str, value: str, valid_values: list[str]
+    ) -> None:
         """Validate that field value is in allowed set.
 
         Args:

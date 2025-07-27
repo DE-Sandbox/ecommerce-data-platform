@@ -54,10 +54,7 @@ class TestDatabaseInitialization:
     def test_schemas_exist(self, db_engine: Engine, db_config: dict[str, any]) -> None:
         """Test that all required schemas from config are created."""
         # Get expected schemas from configuration
-        expected_schemas = {
-            schema["name"]
-            for schema in db_config["schema"]["schemas"]
-        }
+        expected_schemas = {schema["name"] for schema in db_config["schema"]["schemas"]}
 
         with db_engine.connect() as conn:
             result = conn.execute(
@@ -65,7 +62,7 @@ class TestDatabaseInitialization:
                     "SELECT schema_name FROM information_schema.schemata "
                     "WHERE schema_name = ANY(:schemas)"
                 ),
-                {"schemas": list(expected_schemas)}
+                {"schemas": list(expected_schemas)},
             )
             actual_schemas = {row[0] for row in result}
 
@@ -86,7 +83,9 @@ class TestDatabaseInitialization:
 
             assert "uuid_generate_v7" in functions
 
-    def test_all_tables_exist(self, db_engine: Engine, db_config: dict[str, any]) -> None:
+    def test_all_tables_exist(
+        self, db_engine: Engine, db_config: dict[str, any]
+    ) -> None:
         """Test that all tables from config are created."""
         # Get expected tables from configuration
         expected_tables_by_schema = db_config["schema"]["tables"]
@@ -135,7 +134,7 @@ class TestDatabaseInitialization:
         expected_indexes = {
             "idx_orders_customer_id",
             "idx_orders_status",
-            "idx_orders_created_at"
+            "idx_orders_created_at",
         }
 
         missing_indexes = expected_indexes - index_names
@@ -166,7 +165,9 @@ class TestDatabaseInitialization:
 
             assert "audit_trigger" in functions
 
-    def test_database_matches_config(self, db_engine: Engine, db_config: dict[str, any]) -> None:
+    def test_database_matches_config(
+        self, db_engine: Engine, db_config: dict[str, any]
+    ) -> None:
         """Test that database name matches configuration."""
         with db_engine.connect() as conn:
             result = conn.execute(text("SELECT current_database()"))
