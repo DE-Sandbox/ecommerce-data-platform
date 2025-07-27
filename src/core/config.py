@@ -139,7 +139,7 @@ class ConfigLoader:
 
         # Cast to ConfigDict since we know result is a dict
         # (we started with a dict and _substitute_env_vars preserves structure)
-        config_result = cast(ConfigDict, result)
+        config_result = cast("ConfigDict", result)
 
         # Cache the result
         self._cache[cache_key] = config_result
