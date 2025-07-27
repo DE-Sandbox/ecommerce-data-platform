@@ -20,6 +20,10 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.0",
     "pyyaml>=6.0.0",
+    "alembic>=1.16.4",
+    "asyncpg>=0.30.0",
+    "greenlet>=3.2.3",
+    "alembic-utils>=0.8.8",
 ]
 
 [project.optional-dependencies]
