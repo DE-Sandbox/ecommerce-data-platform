@@ -1,0 +1,185 @@
+# Database Configuration
+# This file contains all database-related configuration
+# Use environment variables for sensitive data in production
+
+default: &default
+  engine: postgresql
+  encoding: utf8
+  pool_size: 5
+  pool_timeout: 5000
+  connect_timeout: 10
+  command_timeout: 30000
+  
+  # Connection parameters
+  host: ${DB_HOST:-localhost}
+  port: ${DB_PORT:-5432}
+  username: ${DB_USER:-postgres}
+  password: ${DB_PASSWORD:-postgres}
+  
+  # SSL Configuration
+  ssl_mode: ${DB_SSL_MODE:-prefer}
+  ssl_cert: ${DB_SSL_CERT:-}
+  ssl_key: ${DB_SSL_KEY:-}
+  ssl_root_cert: ${DB_SSL_ROOT_CERT:-}
+
+development:
+  <<: *default
+  database: ${DB_NAME:-ecommerce}
+  schema_search_path: ecommerce,audit,archive,public
+  
+  # Development-specific settings
+  log_queries: true
+  log_query_duration: true
+  statement_timeout: 60000
+  
+  # Pool settings for development
+  pool_size: 5
+  max_overflow: 10
+
+test:
+  <<: *default
+  database: ${DB_NAME:-ecommerce}
+  schema_search_path: ecommerce,audit,archive,public
+  
+  # Test-specific settings
+  log_queries: false
+  statement_timeout: 30000
+  
+  # Smaller pool for tests
+  pool_size: 2
+  max_overflow: 5
+
+production:
+  <<: *default
+  database: ${DB_NAME:-ecommerce_prod}
+  schema_search_path: ecommerce,audit,archive,public
+  
+  # Production settings
+  log_queries: false
+  log_query_duration: true
+  statement_timeout: 30000
+  
+  # Production pool settings
+  pool_size: ${DB_POOL_SIZE:-20}
+  max_overflow: ${DB_MAX_OVERFLOW:-40}
+  pool_pre_ping: true
+  pool_recycle: 3600
+  
+  # SSL required in production
+  ssl_mode: ${DB_SSL_MODE:-require}
+
+# LocalStack configuration for local development
+localstack:
+  <<: *default
+  host: ${LOCALSTACK_HOST:-localhost}
+  port: ${LOCALSTACK_DB_PORT:-5432}
+  database: postgres  # Default PostgreSQL database
+  username: postgres
+  password: postgres
+  
+  # LocalStack specific
+  log_queries: true
+  ssl_mode: disable
+
+# Schema configuration
+schema:
+  # Schemas created by our schema
+  schemas:
+    - name: ecommerce
+      description: Main application schema with all business tables
+    - name: audit
+      description: Audit logging and compliance tracking
+    - name: archive
+      description: Archived data for long-term storage
+  
+  # Default schema for application
+  default: ecommerce
+  
+  # Table locations
+  tables:
+    # Main ecommerce schema tables
+    ecommerce:
+      - customers
+      - customer_pii
+      - addresses
+      - customer_consents
+      - categories
+      - products
+      - product_variants
+      - product_prices
+      - locations
+      - inventory
+      - orders
+      - order_items
+      - payment_methods
+      - payments
+      - carts
+      - cart_items
+      - reviews
+    
+    # Audit schema tables
+    audit:
+      - audit_log
+    
+    # Archive schema (tables created as needed)
+    archive: []
+  
+  # Migration settings
+  migrations:
+    directory: sql/migrations
+    table: schema_migrations
+    schema: public  # Migration table in public schema
+    
+  # Seed data settings
+  seeds:
+    directory: sql/seeds
+    
+# Connection pooling configuration
+pooling:
+  # PgBouncer settings (if used)
+  pgbouncer:
+    enabled: ${PGBOUNCER_ENABLED:-false}
+    host: ${PGBOUNCER_HOST:-localhost}
+    port: ${PGBOUNCER_PORT:-6432}
+    pool_mode: transaction
+    max_client_conn: 1000
+    default_pool_size: 25
+    
+# Performance settings
+performance:
+  # Index maintenance
+  autovacuum: true
+  autovacuum_analyze_scale_factor: 0.05
+  autovacuum_vacuum_scale_factor: 0.1
+  
+  # Query optimization
+  enable_partitionwise_join: true
+  enable_partitionwise_aggregate: true
+  
+  # Memory settings (for local dev)
+  shared_buffers: 256MB
+  work_mem: 4MB
+  maintenance_work_mem: 64MB
+  
+# Partitioning configuration
+partitioning:
+  tables:
+    orders:
+      strategy: range
+      column: created_at
+      interval: monthly
+      retention: 24  # months
+      
+# Security settings
+security:
+  row_level_security:
+    enabled_tables:
+      - customers
+      - customer_pii
+      - orders
+      - payment_methods
+  
+  encryption:
+    at_rest: true
+    in_transit: true
+    key_rotation_days: 90
