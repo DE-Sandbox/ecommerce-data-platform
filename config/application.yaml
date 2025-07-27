@@ -1,0 +1,279 @@
+# Application Configuration
+# Central configuration for the e-commerce data platform
+
+app:
+  name: ecommerce-data-platform
+  version: 1.0.0
+  environment: ${APP_ENV:-development}
+  debug: ${APP_DEBUG:-true}
+  timezone: UTC
+  
+# API Configuration
+api:
+  base_url: ${API_BASE_URL:-http://localhost:8000}
+  version: v1
+  prefix: /api
+  
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    
+  # CORS settings
+  cors:
+    enabled: true
+    allowed_origins:
+      - http://localhost:3000
+      - http://localhost:8000
+    allowed_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    allowed_headers:
+      - Content-Type
+      - Authorization
+      
+  # API Documentation
+  docs:
+    enabled: true
+    path: /docs
+    redoc_path: /redoc
+    openapi_path: /openapi.json
+
+# Data Generation Configuration
+data_generation:
+  # Default settings for synthetic data
+  defaults:
+    locale: en_US
+    seed: ${DATA_SEED:-42}
+    
+  # Batch sizes for bulk operations
+  batch_sizes:
+    small: 100
+    medium: 1000
+    large: 10000
+    
+  # Rate limits for generation
+  rate_limits:
+    customers_per_second: 1000
+    orders_per_second: 500
+    events_per_second: 5000
+    
+  # Data quality settings
+  quality:
+    referential_integrity: strict
+    validation: enabled
+    anomaly_rate: 0.01  # 1% anomalies
+    
+  # Privacy modes
+  privacy_modes:
+    development:
+      pii_generation: full
+      data_masking: disabled
+      
+    staging:
+      pii_generation: anonymized
+      data_masking: partial
+      
+    production:
+      pii_generation: synthetic
+      data_masking: full
+
+# Storage Configuration
+storage:
+  # S3 / MinIO settings
+  s3:
+    endpoint: ${S3_ENDPOINT:-http://localhost:9000}
+    access_key: ${S3_ACCESS_KEY:-minioadmin}
+    secret_key: ${S3_SECRET_KEY:-minioadmin}
+    region: ${S3_REGION:-us-east-1}
+    
+    buckets:
+      raw_data: ${S3_RAW_BUCKET:-ecommerce-raw}
+      processed_data: ${S3_PROCESSED_BUCKET:-ecommerce-processed}
+      analytics: ${S3_ANALYTICS_BUCKET:-ecommerce-analytics}
+      logs: ${S3_LOGS_BUCKET:-ecommerce-logs}
+      backups: ${S3_BACKUPS_BUCKET:-ecommerce-backups}
+      
+  # File formats
+  formats:
+    default: parquet
+    alternatives:
+      - json
+      - csv
+      - avro
+      
+# Streaming Configuration
+streaming:
+  # Kafka / Redpanda settings
+  kafka:
+    bootstrap_servers: ${KAFKA_BROKERS:-localhost:9092}
+    schema_registry: ${SCHEMA_REGISTRY_URL:-http://localhost:8081}
+    
+    topics:
+      events:
+        name: ecommerce.events
+        partitions: 12
+        replication_factor: 1
+        
+      orders:
+        name: ecommerce.orders
+        partitions: 6
+        replication_factor: 1
+        
+      inventory:
+        name: ecommerce.inventory
+        partitions: 6
+        replication_factor: 1
+        
+  # Kinesis settings (for AWS)
+  kinesis:
+    region: ${AWS_REGION:-us-east-1}
+    streams:
+      events:
+        name: ecommerce-events
+        shards: 4
+        
+      orders:
+        name: ecommerce-orders
+        shards: 2
+
+# Cache Configuration
+cache:
+  # Redis settings
+  redis:
+    host: ${REDIS_HOST:-localhost}
+    port: ${REDIS_PORT:-6379}
+    password: ${REDIS_PASSWORD:-}
+    db: ${REDIS_DB:-0}
+    
+    # TTL settings (seconds)
+    ttl:
+      default: 3600
+      session: 86400
+      api_response: 300
+      
+    # Key prefixes
+    prefixes:
+      session: "session:"
+      cache: "cache:"
+      rate_limit: "rl:"
+
+# Monitoring Configuration
+monitoring:
+  # Metrics
+  metrics:
+    enabled: true
+    provider: prometheus
+    port: ${METRICS_PORT:-9090}
+    path: /metrics
+    
+  # Logging
+  logging:
+    level: ${LOG_LEVEL:-INFO}
+    format: json
+    
+    # Log destinations
+    handlers:
+      console:
+        enabled: true
+        
+      file:
+        enabled: true
+        path: logs/app.log
+        max_size_mb: 100
+        backup_count: 5
+        
+      structured:
+        enabled: true
+        provider: structlog
+        
+  # Tracing
+  tracing:
+    enabled: ${TRACING_ENABLED:-true}
+    provider: opentelemetry
+    endpoint: ${OTEL_ENDPOINT:-http://localhost:4317}
+    sample_rate: ${TRACE_SAMPLE_RATE:-0.1}
+    
+  # Health checks
+  health:
+    enabled: true
+    path: /health
+    checks:
+      - database
+      - redis
+      - s3
+      - kafka
+
+# Security Configuration
+security:
+  # Authentication
+  auth:
+    provider: ${AUTH_PROVIDER:-local}
+    jwt_secret: ${JWT_SECRET:-change-me-in-production}
+    token_expiry: 3600
+    refresh_token_expiry: 604800
+    
+  # Encryption
+  encryption:
+    algorithm: AES-256-GCM
+    key_rotation_enabled: true
+    key_rotation_days: 90
+    
+  # API Keys
+  api_keys:
+    enabled: true
+    header_name: X-API-Key
+    rate_limit_multiplier: 10
+    
+# Feature Flags
+features:
+  # Data generation features
+  synthetic_data_v2: ${FEATURE_SYNTHETIC_V2:-true}
+  sdv_integration: ${FEATURE_SDV:-false}
+  mimesis_engine: ${FEATURE_MIMESIS:-true}
+  
+  # API features
+  graphql_endpoint: ${FEATURE_GRAPHQL:-false}
+  websocket_updates: ${FEATURE_WEBSOCKET:-false}
+  
+  # Processing features
+  stream_processing: ${FEATURE_STREAMING:-true}
+  batch_processing: ${FEATURE_BATCH:-true}
+  
+# Development Settings
+development:
+  # Hot reload
+  auto_reload: true
+  
+  # Debug toolbar
+  debug_toolbar: true
+  
+  # Profiling
+  profiling:
+    enabled: false
+    output_dir: profiles/
+    
+  # Mock services
+  mock_external_services: true
+  
+# Testing Configuration
+testing:
+  # Test database
+  database_url: ${TEST_DATABASE_URL:-postgresql://postgres:postgres@localhost:5432/ecommerce_test}
+  
+  # Fixtures
+  fixtures_dir: tests/fixtures/
+  
+  # Coverage
+  coverage:
+    enabled: true
+    min_percentage: 80
+    
+  # Performance
+  benchmark:
+    enabled: true
+    output_format: json
