@@ -1,0 +1,100 @@
+"""Pytest configuration and shared fixtures."""
+
+import os
+import subprocess
+import time
+from typing import Generator
+
+import pytest
+from sqlalchemy import Engine, create_engine, text
+from sqlalchemy.exc import OperationalError
+
+from src.core.config import get_database_url
+
+
+def wait_for_postgres(engine: Engine, max_retries: int = 30) -> None:
+    """Wait for PostgreSQL to be ready."""
+    for i in range(max_retries):
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                return
+        except OperationalError:
+            if i == max_retries - 1:
+                raise
+            time.sleep(2)
+
+
+@pytest.fixture(scope="session")
+def ensure_database_ready() -> Generator[None, None, None]:
+    """Ensure database container is running before any tests.
+    
+    This runs once per test session (before ALL tests).
+    """
+    # Check if we're in CI or if postgres is already running
+    if os.environ.get("CI") or os.environ.get("SKIP_DB_SETUP"):
+        yield
+        return
+    
+    # Check if postgres is already healthy
+    try:
+        url = get_database_url("test")
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        engine.dispose()
+        # Already running
+        yield
+        return
+    except Exception:
+        pass
+    
+    # Start postgres if needed
+    print("\n🚀 Starting PostgreSQL container...")
+    subprocess.run(["docker-compose", "up", "-d", "postgres"], check=True)
+    
+    # Wait for health
+    print("⏳ Waiting for PostgreSQL to be healthy...")
+    max_wait = 60
+    start_time = time.time()
+    
+    while time.time() - start_time < max_wait:
+        result = subprocess.run(
+            ["docker-compose", "ps", "postgres"],
+            capture_output=True,
+            text=True
+        )
+        if "healthy" in result.stdout:
+            print("✅ PostgreSQL is ready!")
+            break
+        time.sleep(2)
+    else:
+        raise TimeoutError("PostgreSQL did not become healthy in time")
+    
+    yield
+    
+    # Optionally stop containers after tests (commented out by default)
+    # subprocess.run(["docker-compose", "down"], check=True)
+
+
+@pytest.fixture(scope="session")
+def db_engine_session(ensure_database_ready: None) -> Generator[Engine, None, None]:
+    """Create a session-scoped database engine.
+    
+    This engine is shared across all tests in the session.
+    """
+    url = get_database_url("test")
+    engine = create_engine(url, pool_pre_ping=True)
+    
+    # Ensure connection works
+    wait_for_postgres(engine)
+    
+    yield engine
+    engine.dispose()
+
+
+# Make session engine available at module scope too
+@pytest.fixture(scope="module")
+def db_engine(db_engine_session: Engine) -> Engine:
+    """Module-scoped database engine (reuses session engine)."""
+    return db_engine_session
