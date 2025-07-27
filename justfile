@@ -115,6 +115,41 @@ migrate:
     @echo "🗄️  Running database migrations..."
     export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade head
 
+# Create a new migration
+migrate-new name:
+    @echo "📝 Creating new migration: {{name}}..."
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic revision --autogenerate -m "{{name}}"
+    @echo "✅ Migration created!"
+
+# Show current migration status
+migrate-status:
+    @echo "📊 Migration Status"
+    @echo "=================="
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic current
+    @echo ""
+    @echo "Migration History:"
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic history --verbose
+
+# Downgrade to previous migration
+migrate-down:
+    @echo "⬇️  Downgrading to previous migration..."
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic downgrade -1
+
+# Downgrade to specific revision
+migrate-to revision:
+    @echo "🎯 Migrating to revision: {{revision}}..."
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade {{revision}}
+
+# Show migration SQL without applying
+migrate-sql:
+    @echo "📄 Showing migration SQL..."
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade head --sql
+
+# Verify migrations are in sync with models
+migrate-check:
+    @echo "🔍 Checking if migrations are up to date..."
+    export PATH="$HOME/.local/bin:$PATH" && uv run alembic check
+
 # Database maintenance commands
 db-up:
     @echo "🗄️  Starting database..."
