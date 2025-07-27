@@ -23,7 +23,7 @@ class TestConfigLoader:
         config = loader.load("database", "development")
 
         assert config["engine"] == "postgresql"
-        assert config["database"] == "ecommerce_dev"
+        assert config["database"] == "ecommerce"
         # Check schema names
         schema_names = [s["name"] for s in config["schema"]["schemas"]]
         assert schema_names == ["ecommerce", "audit", "archive"]
@@ -68,7 +68,7 @@ class TestConfigLoader:
     def test_database_url_generation(self) -> None:
         """Test database URL generation."""
         url = get_database_url("development")
-        assert url == "postgresql://postgres:postgres@localhost:5432/ecommerce_dev"
+        assert url == "postgresql://postgres:postgres@localhost:5432/ecommerce"
 
     def test_feature_flags(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test feature flag checking."""
@@ -96,12 +96,12 @@ class TestConfigLoader:
 
         # Development config
         dev_config = loader.load("database", "development")
-        assert dev_config["database"] == "ecommerce_dev"
+        assert dev_config["database"] == "ecommerce"
         assert dev_config["log_queries"] is True
 
         # Test config
         test_config = loader.load("database", "test")
-        assert test_config["database"] == "ecommerce_test"
+        assert test_config["database"] == "ecommerce"
         assert test_config["log_queries"] is False
 
         # Production config
