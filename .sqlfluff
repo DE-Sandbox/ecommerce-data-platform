@@ -1,7 +1,15 @@
 [sqlfluff]
 dialect = postgres
-templater = dbt
+# Default to raw templater, override for dbt files
+templater = raw
 exclude_rules = L003,L018
+# Allow larger SQL files (our schema is comprehensive)
+large_file_skip_byte_limit = 50000
+# Exclude vendor/third-party SQL files
+exclude = 
+    target/,
+    dbt_packages/,
+    macros/
 
 [sqlfluff:indentation]
 indent_unit = space
@@ -16,16 +24,16 @@ spacing_before = touch
 line_position = trailing
 
 [sqlfluff:rules:capitalisation.keywords]
-capitalisation_policy = lower
+capitalisation_policy = upper
 
 [sqlfluff:rules:capitalisation.identifiers]
 extended_capitalisation_policy = lower
 
 [sqlfluff:rules:capitalisation.functions]
-extended_capitalisation_policy = lower
+extended_capitalisation_policy = upper
 
 [sqlfluff:rules:capitalisation.literals]
-capitalisation_policy = lower
+capitalisation_policy = upper
 
 [sqlfluff:rules:ambiguous.join]
 fully_qualify_join_types = outer
@@ -37,6 +45,10 @@ group_by_and_order_by_style = explicit
 project_dir = ./
 profiles_dir = ./profiles
 profile = ecommerce_data_platform
+
+[sqlfluff:rules:layout.long_lines]
+max_line_length = 120
+ignore_comment_lines = True
 
 [sqlfluff:rules:convention.select_trailing_comma]
 select_clause_trailing_comma = forbid

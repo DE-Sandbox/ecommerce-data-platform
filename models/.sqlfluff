@@ -1,0 +1,12 @@
+# SQLFluff configuration for dbt models
+# This overrides the root .sqlfluff for files in the models/ directory
+
+[sqlfluff]
+dialect = postgres
+templater = dbt
+exclude_rules = L003,L018
+
+[sqlfluff:templater:dbt]
+project_dir = ../
+profiles_dir = ../profiles
+profile = ecommerce_data_platform
