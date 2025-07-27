@@ -1,11 +1,20 @@
 """Base model configuration for SQLAlchemy."""
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Integer, text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine as async_engine_from_config,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.schema import MetaData
+
+from src.core.config import get_database_url
 
 # Naming convention for constraints
 convention = {
@@ -101,3 +110,43 @@ class BaseModelNoSoftDelete(Base, TimestampMixin):
     def __repr__(self) -> str:
         """Return string representation of the model instance."""
         return f"<{self.__class__.__name__}(id={self.id})>"
+
+
+def create_async_engine(database_url: str | None = None) -> AsyncEngine:
+    """Create async database engine.
+    
+    Args:
+        database_url: Optional database URL. If not provided, uses config.
+        
+    Returns:
+        AsyncEngine: Configured async SQLAlchemy engine
+    """
+    if database_url is None:
+        database_url = get_database_url(async_driver=True)
+    
+    return async_engine_from_config(
+        database_url,
+        echo=False,  # Set to False in production
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+    )
+
+
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get async database session.
+    
+    Usage:
+        async with get_async_session() as session:
+            # Use session
+    """
+    engine = create_async_engine()
+    async_session_maker = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    
+    async with async_session_maker() as session:
+        yield session
