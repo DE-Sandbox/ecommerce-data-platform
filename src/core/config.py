@@ -271,12 +271,25 @@ def load_application_config(environment: str | None = None) -> ConfigDict:
     return get_config().load("application", environment)
 
 
-def get_database_url(environment: str | None = None) -> str:
-    """Get database connection URL."""
+def get_database_url(
+    environment: str | None = None, *, async_driver: bool = False
+) -> str:
+    """Get database connection URL.
+
+    Args:
+        environment: Environment name (development, test, production)
+        async_driver: If True, returns URL for async driver (asyncpg)
+
+    Returns:
+        Database connection URL
+
+    """
     config = load_database_config(environment)
 
+    driver = "postgresql+asyncpg" if async_driver else "postgresql"
+
     return (
-        f"postgresql://{config['username']}:{config['password']}"
+        f"{driver}://{config['username']}:{config['password']}"
         f"@{config['host']}:{config['port']}/{config['database']}"
     )
 
