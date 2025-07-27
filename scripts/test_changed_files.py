@@ -97,7 +97,7 @@ def run_tests(test_files: list[Path]) -> int:
     # Add flags for CI/CD vs local
     if sys.argv[1:] == ["--ci"]:
         # Full test run in CI
-        cmd = ["uv", "run", "pytest", "tests/", "-v", "--cov=src", "--cov-report=term-missing"]
+        cmd = ["uv", "run", "pytest", "tests/", "-v", "--cov=src", "--cov-report=term-missing", "--cov-report=xml"]
     else:
         # Quick run for pre-push
         cmd.extend(["-q", "--tb=short"])

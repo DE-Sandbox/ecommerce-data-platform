@@ -41,7 +41,12 @@ jobs:
     
     - name: Install dependencies
       run: |
-        uv sync --frozen
+        uv sync --frozen --all-extras
+    
+    - name: Install PostgreSQL client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
     
     - name: Initialize database
       env:
@@ -67,7 +72,9 @@ jobs:
       run: |
         uv run ruff check src/ tests/
         uv run ruff format --check src/ tests/
-        uv run sqlfluff lint sql/ models/
+        uv run sqlfluff lint sql/
+        # Lint models/ only if it exists
+        if [ -d models/ ]; then uv run sqlfluff lint models/; fi
     
     - name: Run type checking
       run: |
@@ -81,12 +88,13 @@ jobs:
         DB_PASSWORD: postgres
         DB_NAME: ecommerce
       run: |
-        python scripts/test_changed_files.py --ci
+        uv run python scripts/test_changed_files.py --ci
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v4
+      if: success()
       with:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
-      if: always()
+        fail_ci_if_error: false
