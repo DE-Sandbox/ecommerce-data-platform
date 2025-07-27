@@ -1,7 +1,7 @@
 # LocalStack Configuration for Local Development
 terraform {
   required_version = ">= 1.9.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -12,8 +12,8 @@ terraform {
 
 provider "aws" {
   region                      = var.aws_region
-  access_key                  = "test"
-  secret_key                  = "test"
+  access_key                  = "test"  # pragma: allowlist secret
+  secret_key                  = "test"  # pragma: allowlist secret
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
@@ -31,7 +31,7 @@ provider "aws" {
     glue           = "http://localhost:4566"
     athena         = "http://localhost:4566"
     redshift       = "http://localhost:4566"
-    secretsmanager = "http://localhost:4566"
+    secretsmanager = "http://localhost:4566"  # pragma: allowlist secret
     stepfunctions  = "http://localhost:4566"
     cloudwatch     = "http://localhost:4566"
     events         = "http://localhost:4566"
@@ -60,10 +60,10 @@ variable "project_name" {
 # Data Lake S3 Buckets
 module "data_lake" {
   source = "../../modules/s3_data_lake"
-  
+
   project_name = var.project_name
   environment  = var.environment
-  
+
   bucket_names = {
     raw       = "${var.project_name}-${var.environment}-raw"
     processed = "${var.project_name}-${var.environment}-processed"
@@ -76,10 +76,10 @@ module "data_lake" {
 # DynamoDB Tables
 module "dynamodb" {
   source = "../../modules/dynamodb"
-  
+
   project_name = var.project_name
   environment  = var.environment
-  
+
   tables = {
     job_metadata = {
       hash_key  = "job_id"
@@ -101,18 +101,18 @@ module "dynamodb" {
 # Kinesis Streams
 module "kinesis" {
   source = "../../modules/kinesis"
-  
+
   project_name = var.project_name
   environment  = var.environment
-  
+
   streams = {
     order_events = {
-      shard_count       = 1
-      retention_period  = 24
+      shard_count      = 1
+      retention_period = 24
     }
     user_activity = {
-      shard_count       = 1
-      retention_period  = 24
+      shard_count      = 1
+      retention_period = 24
     }
   }
 }
@@ -120,20 +120,20 @@ module "kinesis" {
 # SQS Queues
 module "sqs" {
   source = "../../modules/sqs"
-  
+
   project_name = var.project_name
   environment  = var.environment
-  
+
   queues = {
     ingestion_queue = {
       visibility_timeout = 300
-      message_retention  = 345600  # 4 days
-      has_dlq           = true
+      message_retention  = 345600 # 4 days
+      has_dlq            = true
     }
     processing_queue = {
       visibility_timeout = 300
       message_retention  = 345600
-      has_dlq           = true
+      has_dlq            = true
     }
   }
 }

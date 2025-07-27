@@ -18,9 +18,9 @@ variable "bucket_names" {
 # Create S3 buckets
 resource "aws_s3_bucket" "data_lake" {
   for_each = var.bucket_names
-  
+
   bucket = each.value
-  
+
   tags = {
     Name        = each.value
     Environment = var.environment
@@ -32,7 +32,7 @@ resource "aws_s3_bucket" "data_lake" {
 # Enable versioning for artifacts bucket
 resource "aws_s3_bucket_versioning" "artifacts" {
   bucket = aws_s3_bucket.data_lake["artifacts"].id
-  
+
   versioning_configuration {
     status = "Enabled"
   }
@@ -41,22 +41,22 @@ resource "aws_s3_bucket_versioning" "artifacts" {
 # Lifecycle policies for data retention
 resource "aws_s3_bucket_lifecycle_configuration" "data_lifecycle" {
   for_each = {
-    raw       = 30   # Move to Glacier after 30 days
-    processed = 90   # Move to Glacier after 90 days
-    logs      = 7    # Delete after 7 days
+    raw       = 30 # Move to Glacier after 30 days
+    processed = 90 # Move to Glacier after 90 days
+    logs      = 7  # Delete after 7 days
   }
-  
+
   bucket = aws_s3_bucket.data_lake[each.key].id
-  
+
   rule {
     id     = "${each.key}-lifecycle"
     status = "Enabled"
-    
+
     transition {
       days          = each.value
       storage_class = each.key == "logs" ? "GLACIER" : "GLACIER"
     }
-    
+
     expiration {
       days = each.key == "logs" ? each.value : 365
     }
@@ -66,9 +66,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "data_lifecycle" {
 # Block public access
 resource "aws_s3_bucket_public_access_block" "data_lake" {
   for_each = var.bucket_names
-  
+
   bucket = aws_s3_bucket.data_lake[each.key].id
-  
+
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true

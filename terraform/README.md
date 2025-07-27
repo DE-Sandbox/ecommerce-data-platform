@@ -68,10 +68,10 @@ Each module is designed to be reusable across environments:
 ```hcl
 module "data_lake" {
   source = "../../modules/s3_data_lake"
-  
+
   project_name = var.project_name
   environment  = var.environment
-  
+
   bucket_names = {
     raw       = "${var.project_name}-${var.environment}-raw"
     processed = "${var.project_name}-${var.environment}-processed"
@@ -82,7 +82,7 @@ module "data_lake" {
 
 ## Security Best Practices
 
-1. **State Management**: 
+1. **State Management**:
    - Local: State stored locally (gitignored)
    - AWS: Use S3 backend with encryption and DynamoDB locking
 

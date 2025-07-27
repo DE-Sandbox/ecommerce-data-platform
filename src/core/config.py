@@ -7,7 +7,7 @@ import os
 import re
 from functools import cache
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 import yaml
 
@@ -135,12 +135,16 @@ class ConfigLoader:
                 result[key] = value
 
         # Substitute environment variables
-        result = self._substitute_env_vars(result)  # type: ignore[assignment]
+        result = self._substitute_env_vars(result)
 
-        # Cache the result (we know result is a dict at this point)
-        self._cache[cache_key] = result  # type: ignore[assignment]
+        # Cast to ConfigDict since we know result is a dict
+        # (we started with a dict and _substitute_env_vars preserves structure)
+        config_result = cast(ConfigDict, result)
 
-        return result  # type: ignore[return-value]
+        # Cache the result
+        self._cache[cache_key] = config_result
+
+        return config_result
 
     def get(
         self, config_name: str, key_path: str, default: ConfigValue = None

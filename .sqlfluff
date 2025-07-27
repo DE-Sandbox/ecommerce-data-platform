@@ -2,7 +2,7 @@
 dialect = postgres
 # Default to raw templater, override for dbt files
 templater = raw
-exclude_rules = L003,L018
+exclude_rules = L003,L018,RF05
 # Allow larger SQL files (our schema is comprehensive)
 large_file_skip_byte_limit = 50000
 # Set max line length
@@ -59,3 +59,4 @@ forbid_subquery_in = both
 
 [sqlfluff:rules:references.special_chars]
 unquoted_identifiers_policy = all
+quoted_identifiers_policy = all

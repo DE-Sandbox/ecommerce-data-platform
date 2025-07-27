@@ -24,7 +24,7 @@ command_exists() {
 if command_exists docker; then
     echo -e "\n${YELLOW}1. Running Docker Scout CVE scan...${NC}"
     docker scout cves "$IMAGE_NAME" || echo -e "${YELLOW}Docker Scout not available. Install with: docker scout init${NC}"
-    
+
     echo -e "\n${YELLOW}2. Running Docker Scout recommendations...${NC}"
     docker scout recommendations "$IMAGE_NAME" 2>/dev/null || true
 fi

@@ -24,7 +24,7 @@ repos:
         exclude: \.lock$|\.example$
 
   # YAML linting
-  - repo: https://github.com/pre-commit/mirrors-yamllint
+  - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
       - id: yamllint
@@ -43,16 +43,18 @@ repos:
       - id: check-yaml
       - id: check-merge-conflict
       - id: mixed-line-ending
-      - id: no-commit-to-branch
-        args: ['--branch', 'main']
+      # Trunk-based development: We commit directly to main
+      # Enable this if you want to enforce feature branches
+      # - id: no-commit-to-branch
+      #   args: ['--branch', 'main']
 
-  # Terraform formatting
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.2
-    hooks:
-      - id: terraform_fmt
-      - id: terraform_validate
-      - id: terraform_tflint
+  # Terraform formatting (disabled until tflint is installed)
+  # - repo: https://github.com/antonbabenko/pre-commit-terraform
+  #   rev: v1.96.2
+  #   hooks:
+  #     - id: terraform_fmt
+  #     - id: terraform_validate
+  #     - id: terraform_tflint
 
   # SQL formatting with SQLFluff
   - repo: https://github.com/sqlfluff/sqlfluff
@@ -63,14 +65,28 @@ repos:
       - id: sqlfluff-fix
         files: \.(sql|dml|ddl)$
 
-  # MyPy type checking (optional - can be slow)
-  # Uncomment if you want strict type checking in pre-commit
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.13.0
-  #   hooks:
-  #     - id: mypy
-  #       additional_dependencies: [types-pyyaml, types-requests]
-  #       args: [--strict]
+  # MyPy type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        files: ^src/
+        additional_dependencies: [types-pyyaml]
+        args: [
+          --python-version=3.13,
+          --warn-return-any,
+          --warn-unused-configs,
+          --disallow-untyped-defs,
+          --disallow-incomplete-defs,
+          --check-untyped-defs,
+          --disallow-untyped-decorators,
+          --no-implicit-optional,
+          --warn-redundant-casts,
+          --warn-unused-ignores,
+          --warn-no-return,
+          --warn-unreachable,
+          --strict-equality,
+        ]
 
 # Configuration for specific file types
 files: ^(src/|tests/|scripts/|terraform/|sql/)

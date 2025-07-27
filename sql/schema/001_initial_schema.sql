@@ -652,7 +652,7 @@ CREATE SEQUENCE order_number_seq START WITH 1;
 -- Function to generate order numbers
 CREATE OR REPLACE FUNCTION GENERATE_ORDER_NUMBER()
 RETURNS varchar AS $$
-    SELECT 'ORD-' || to_char(CURRENT_TIMESTAMP, 'YYYYMMDD') || '-' || 
+    SELECT 'ORD-' || to_char(CURRENT_TIMESTAMP, 'YYYYMMDD') || '-' ||
            lpad(nextval('order_number_seq')::text, 6, '0');
 $$ LANGUAGE sql;
 
