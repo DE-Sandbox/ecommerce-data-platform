@@ -1,4 +1,4 @@
-# Week 1 Todo List: E-commerce Data Engineering Platform
+ca# Week 1 Todo List: E-commerce Data Engineering Platform
 
 ## Overview
 **Goal**: Establish complete local development environment with CI/CD foundation and AWS deployment readiness  
