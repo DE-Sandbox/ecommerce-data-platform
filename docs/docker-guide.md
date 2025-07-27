@@ -1,6 +1,6 @@
 # Modern Docker Containerization for Data Engineering (2025)
 
-This guide covers modern Docker practices optimized for data engineering workloads, featuring multi-stage builds, security best practices, and performance optimizations.
+nThis guide covers modern Docker practices optimized for data engineering workloads, featuring multi-stage builds, security best practices, and performance optimizations.
 
 ## Multi-Stage Builds for Data Engineering
 
@@ -339,6 +339,103 @@ docker inspect ecommerce-platform | grep -i memory
 time docker build .
 ```
 
+## Development Environment Rules
+
+### Stateless and Reproducible Environments
+
+**CRITICAL: Docker containers must be stateless and reproducible. NEVER manually modify running containers.**
+
+#### ❌ What NOT to Do
+
+```bash
+# NEVER run manual database commands
+docker exec -i postgres psql -U postgres -c "CREATE DATABASE test_db;"
+docker exec -i postgres psql -U postgres -d mydb -f schema.sql
+
+# NEVER manually install packages in containers
+docker exec -it myapp pip install pandas
+
+# NEVER modify files directly in containers
+docker exec -it myapp vi /app/config.py
+```
+
+#### ✅ Correct Approaches
+
+1. **Database Initialization**: Use `docker-entrypoint-initdb.d/`
+   ```yaml
+   postgres:
+     volumes:
+       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+       - ./sql/schema/001_initial_schema.sql:/docker-entrypoint-initdb.d/02-schema.sql
+   ```
+
+2. **Application Configuration**: Use environment variables or mounted configs
+   ```yaml
+   app:
+     environment:
+       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ecommerce
+     volumes:
+       - ./config:/app/config:ro
+   ```
+
+3. **Dependency Changes**: Update Dockerfile or requirements
+   ```dockerfile
+   # In Dockerfile
+   COPY requirements.txt .
+   RUN pip install -r requirements.txt
+   ```
+
+### Testing with Docker
+
+**Tests must create their own isolated environment:**
+
+```python
+# conftest.py
+@pytest.fixture(scope="session")
+def docker_compose_file(pytestconfig):
+    """Override docker-compose for tests."""
+    return str(Path(__file__).parent / "docker-compose.test.yml")
+
+@pytest.fixture(scope="session")
+def docker_services(docker_services):
+    """Ensure services are ready before tests."""
+    docker_services.wait_until_responsive(
+        check=lambda: is_postgres_ready(),
+        timeout=30.0,
+        pause=0.1,
+    )
+    return docker_services
+```
+
+### Container Lifecycle Management
+
+1. **Development Workflow**
+   ```bash
+   # Start fresh environment
+   docker-compose down -v  # Remove volumes for clean state
+   docker-compose up -d
+   
+   # View logs
+   docker-compose logs -f app
+   
+   # Restart after code changes
+   docker-compose restart app
+   ```
+
+2. **Data Persistence**
+   - Use named volumes for data that should persist
+   - Use bind mounts for development code
+   - Never rely on container filesystem for important data
+
+3. **Environment Reproducibility**
+   ```bash
+   # This should ALWAYS work identically
+   git clone <repo>
+   cd <repo>
+   docker-compose up -d
+   # Application is ready, no manual steps needed
+   ```
+
 ## Best Practices Summary
 
 1. **Use multi-stage builds** to minimize production image size
@@ -351,5 +448,8 @@ time docker build .
 8. **Mount data volumes appropriately** for large datasets
 9. **Enable BuildKit** for faster builds and advanced features
 10. **Tag images semantically** for better version management
+11. **NEVER manually modify containers** - maintain stateless, reproducible environments
+12. **Use initialization scripts** for database setup, not manual commands
+13. **Test in isolated environments** using docker-compose overrides or testcontainers
 
 This modern Docker setup provides optimal performance, security, and maintainability for data engineering workloads while supporting efficient local development and CI/CD workflows.

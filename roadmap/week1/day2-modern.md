@@ -12,12 +12,7 @@
 
 ## Day 2 Morning Session: Data Modeling & Database Design
 
-### 1. E-commerce Data Model Design (1.5 hours)
-- [ ] Design core domain models (customers, products, orders, payments)
-- [ ] Create PostgreSQL schema with modern features
-- [ ] Design DynamoDB single-table schema
-- [ ] Document relationships and constraints
-- [ ] Plan for GDPR compliance in schema
+### 1. L
 
 ### 2. Migration Framework Setup (1 hour)
 - [ ] Set up Alembic for database migrations

@@ -20,6 +20,42 @@ uv run ruff check src/
 cd terraform/environments/local && terraform apply
 ```
 
+## Configuration Management Guidelines
+
+**ALWAYS use configuration files instead of hardcoding values:**
+- ✅ Create reusable YAML configuration files in the `config/` directory
+- ✅ Use environment variable substitution with `${VAR:-default}` syntax
+- ✅ Separate configuration by environment (development, test, production)
+- ✅ Use the `ConfigLoader` class from `src/core/config.py` to load configurations
+- ❌ NEVER hardcode database credentials, API keys, or URLs in source code
+- ❌ NEVER commit sensitive configuration values
+
+**Configuration file structure:**
+- `config/database.yaml` - Database connections and settings
+- `config/application.yaml` - Application settings and feature flags
+- `config/services.yaml` - External service configurations (when needed)
+
+## Python Development Standards
+
+**ALWAYS follow strict type safety and code quality rules:**
+- ✅ Type annotate ALL functions and class methods (including `-> None` for procedures)
+- ✅ Use modern Python 3.13+ type syntax (`type` keyword, `X | Y` unions)
+- ✅ Run `uv run ruff check . --fix` before committing
+- ✅ Ensure all tests pass with `uv run pytest tests/`
+- ❌ NEVER use `typing.Any` - define specific types instead
+- ❌ NEVER use `os.path` - use `pathlib.Path` instead
+- ❌ NEVER commit code that fails linting
+
+**Type definitions example:**
+```python
+# Define reusable types
+type ConfigValue = str | int | float | bool | list[ConfigValue] | dict[str, ConfigValue] | None
+type ConfigDict = dict[str, ConfigValue]
+```
+
+**For detailed Python rules, see:** `docs/python-development-rules.md`
+**For Docker and container guidelines, see:** `docs/docker-guide.md`
+
 ## Git Commit Guidelines
 
 **NEVER include AI attribution in commit messages:**
@@ -81,13 +117,13 @@ This is an e-commerce data engineering platform implementing a modern lakehouse 
 
 ### Local Development Setup
 ```bash
-# Start all services
+# Start all services (databases are initialized automatically via docker-entrypoint-initdb.d)
 docker-compose up -d
 
-# Initialize databases
-docker exec -i postgres psql -U postgres < scripts/init_postgres.sql
+# Wait for services to be healthy
+docker-compose ps
 
-# Create S3 buckets in LocalStack
+# Create S3 buckets in LocalStack (if not auto-created)
 aws --endpoint-url=http://localhost:4566 s3 mb s3://data-lake
 aws --endpoint-url=http://localhost:4566 s3 mb s3://staging
 ```

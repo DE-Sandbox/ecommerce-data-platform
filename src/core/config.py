@@ -7,6 +7,7 @@ import os
 import re
 from functools import cache
 from pathlib import Path
+from typing import Final
 
 import yaml
 
@@ -14,11 +15,14 @@ import yaml
 type ConfigValue = str | int | float | bool | list[ConfigValue] | dict[str, ConfigValue] | None
 type ConfigDict = dict[str, ConfigValue]
 
+# Constants
+MAX_PORT: Final[int] = 65535
+MIN_PORT: Final[int] = 1
+
 
 class ConfigValidationError(Exception):
     """Raised when configuration validation fails."""
 
-    pass
 
 
 class ConfigLoader:
@@ -169,6 +173,7 @@ class ConfigLoader:
 
         Raises:
             ConfigValidationError: If required field is missing
+
         """
         config = self.load(config_name)
         for field in required_fields:
@@ -185,12 +190,13 @@ class ConfigLoader:
 
         Raises:
             ConfigValidationError: If field has incorrect type
+
         """
         for field, expected_type in field_types.items():
             if field in config:
                 value = config[field]
                 # Handle string to int conversion from environment variables
-                if expected_type == int and isinstance(value, str) and value.isdigit():
+                if expected_type is int and isinstance(value, str) and value.isdigit():
                     continue
                 if not isinstance(value, expected_type):
                     msg = f"Invalid type for field '{field}': expected {expected_type.__name__}, got {type(value).__name__}"
@@ -204,10 +210,11 @@ class ConfigLoader:
 
         Raises:
             ConfigValidationError: If port is invalid
+
         """
         port_num = int(port) if isinstance(port, str) else port
-        if not 1 <= port_num <= 65535:
-            msg = "Port must be between 1 and 65535"
+        if not MIN_PORT <= port_num <= MAX_PORT:
+            msg = f"Port must be between {MIN_PORT} and {MAX_PORT}"
             raise ConfigValidationError(msg)
 
     def validate_enum(self, field_name: str, value: str, valid_values: list[str]) -> None:
@@ -220,6 +227,7 @@ class ConfigLoader:
 
         Raises:
             ConfigValidationError: If value is not allowed
+
         """
         if value not in valid_values:
             msg = f"Invalid value '{value}' for field '{field_name}'. Must be one of: {', '.join(valid_values)}"

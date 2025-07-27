@@ -1,76 +1,86 @@
+# Pre-commit hooks configuration
+# See https://pre-commit.com for more information
+
+default_language_version:
+  python: python3.13
+
 repos:
+  # Ruff - Fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+        name: ruff lint
+      - id: ruff-format
+        name: ruff format
+
+  # Security checks
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: \.lock$|\.example$
+
+  # YAML linting
+  - repo: https://github.com/pre-commit/mirrors-yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-d, '{extends: default, rules: {line-length: {max: 120}}}']
+
+  # Trailing whitespace and file endings
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-json
       - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
       - id: check-merge-conflict
-      - id: debug-statements
-      - id: check-docstring-first
+      - id: mixed-line-ending
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
 
-  - repo: https://github.com/psf/black
-    rev: 23.7.0
+  # Terraform formatting
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.2
     hooks:
-      - id: black
-        language_version: python3.11
+      - id: terraform_fmt
+      - id: terraform_validate
+      - id: terraform_tflint
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        args: ["--profile", "black"]
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        additional_dependencies: [flake8-docstrings, flake8-bugbear]
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-all]
-        args: [--ignore-missing-imports]
-
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.5
-    hooks:
-      - id: bandit
-        args: ["-r", "src/"]
-        exclude: tests/
-
+  # SQL formatting with SQLFluff
   - repo: https://github.com/sqlfluff/sqlfluff
-    rev: 2.3.0
+    rev: 3.2.0
     hooks:
       - id: sqlfluff-lint
-        args: [--dialect, postgres]
-        files: \.sql$
-        additional_dependencies: [dbt-postgres]
+        files: \.(sql|dml|ddl)$
+      - id: sqlfluff-fix
+        files: \.(sql|dml|ddl)$
 
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.32.0
-    hooks:
-      - id: yamllint
-        args: [-d, relaxed]
+  # MyPy type checking (optional - can be slow)
+  # Uncomment if you want strict type checking in pre-commit
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.13.0
+  #   hooks:
+  #     - id: mypy
+  #       additional_dependencies: [types-pyyaml, types-requests]
+  #       args: [--strict]
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0
-    hooks:
-      - id: prettier
-        types_or: [yaml, json, markdown]
-        exclude: ^(\.github/|docs/_build/)
-
-  - repo: local
-    hooks:
-      - id: pytest-check
-        name: pytest-check
-        entry: pytest
-        language: system
-        pass_filenames: false
-        always_run: true
-        args: [tests/unit/, --tb=short]
-        stages: [commit]
+# Configuration for specific file types
+files: ^(src/|tests/|scripts/|terraform/|sql/)
+exclude: |
+  (?x)^(
+    .*/migrations/.*|
+    .*\.egg-info/.*|
+    build/.*|
+    dist/.*|
+    .venv/.*|
+    venv/.*|
+    .terraform/.*
+  )$
