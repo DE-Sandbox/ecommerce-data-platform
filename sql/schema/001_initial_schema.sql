@@ -692,8 +692,10 @@ COMMENT ON TABLE customer_pii IS 'Separated PII for GDPR compliance and data pro
 COMMENT ON TABLE orders IS 'Order table with UUID v7 for time-based ordering';
 COMMENT ON TABLE inventory IS 'Real-time inventory tracking with optimistic locking';
 COMMENT ON COLUMN inventory.version IS 'Optimistic lock version to prevent race conditions';
-COMMENT ON FUNCTION UUID_GENERATE_V7() IS 'Generates time-ordered UUIDs for better index performance (pure SQL implementation)';
-COMMENT ON FUNCTION UUID_GENERATE_V7_PRECISE() IS 'Generates UUID v7 with sub-millisecond precision for high-throughput scenarios';
+COMMENT ON FUNCTION UUID_GENERATE_V7() IS
+    'Generates time-ordered UUIDs for better index performance (pure SQL implementation)';
+COMMENT ON FUNCTION UUID_GENERATE_V7_PRECISE() IS
+    'Generates UUID v7 with sub-millisecond precision for high-throughput scenarios';
 COMMENT ON FUNCTION EXTRACT_TIMESTAMP_FROM_UUIDV7(
     uuid
 ) IS 'Extracts creation timestamp from UUID v7 values';
