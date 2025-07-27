@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import Engine, create_engine, inspect, text
 from sqlalchemy.exc import OperationalError
 
-from src.core.config import ConfigLoader, get_database_url
+from src.core.config import ConfigLoader, ConfigValue, get_database_url
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +36,7 @@ def db_engine() -> Generator[Engine]:
 
 
 @pytest.fixture(scope="module")
-def db_config() -> dict[str, any]:
+def db_config() -> dict[str, ConfigValue]:
     """Load database configuration from YAML."""
     loader = ConfigLoader()
     return loader.load("database", "development")
@@ -51,7 +51,9 @@ class TestDatabaseInitialization:
             result = conn.execute(text("SELECT 1"))
             assert result.scalar() == 1
 
-    def test_schemas_exist(self, db_engine: Engine, db_config: dict[str, any]) -> None:
+    def test_schemas_exist(
+        self, db_engine: Engine, db_config: dict[str, ConfigValue]
+    ) -> None:
         """Test that all required schemas from config are created."""
         # Get expected schemas from configuration
         expected_schemas = {schema["name"] for schema in db_config["schema"]["schemas"]}
@@ -84,7 +86,7 @@ class TestDatabaseInitialization:
             assert "uuid_generate_v7" in functions
 
     def test_all_tables_exist(
-        self, db_engine: Engine, db_config: dict[str, any]
+        self, db_engine: Engine, db_config: dict[str, ConfigValue]
     ) -> None:
         """Test that all tables from config are created."""
         # Get expected tables from configuration
@@ -166,7 +168,7 @@ class TestDatabaseInitialization:
             assert "audit_trigger" in functions
 
     def test_database_matches_config(
-        self, db_engine: Engine, db_config: dict[str, any]
+        self, db_engine: Engine, db_config: dict[str, ConfigValue]
     ) -> None:
         """Test that database name matches configuration."""
         with db_engine.connect() as conn:
