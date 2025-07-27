@@ -83,6 +83,14 @@ clean:
     export PATH="$HOME/.local/bin:$PATH" && uv cache clean
     @echo "✨ Clean!"
 
+# Deep clean (including database volumes)
+clean-all: clean
+    @echo "⚠️  This will DELETE all Docker volumes including database data. Continue? [y/N]"
+    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
+    @echo "🗑️  Removing all Docker volumes..."
+    docker volume prune -f
+    @echo "✨ Deep clean complete!"
+
 # AWS credentials check (no exposure)
 check-aws:
     @echo "🔍 Checking AWS configuration..."
@@ -106,6 +114,87 @@ dev:
 migrate:
     @echo "🗄️  Running database migrations..."
     export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade head
+
+# Database maintenance commands
+db-up:
+    @echo "🗄️  Starting database..."
+    docker-compose up -d postgres
+    @echo "⏳ Waiting for database to be ready..."
+    @while ! docker-compose exec postgres pg_isready -q; do \
+        echo "Waiting for PostgreSQL..."; \
+        sleep 2; \
+    done
+    @echo "✅ Database is ready!"
+
+db-down:
+    @echo "🛑 Stopping database..."
+    docker-compose stop postgres
+    @echo "✅ Database stopped"
+
+db-restart: db-down db-up
+    @echo "🔄 Database restarted!"
+
+db-reset:
+    @echo "⚠️  This will DELETE all data in the database. Continue? [y/N]"
+    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
+    @echo "🗑️  Resetting database..."
+    docker-compose down postgres
+    docker volume rm ecommerce-data-platform_postgres_data || true
+    docker-compose up -d postgres
+    @echo "⏳ Waiting for database to be ready..."
+    @while ! docker-compose exec postgres pg_isready -q; do \
+        echo "Waiting for PostgreSQL..."; \
+        sleep 2; \
+    done
+    @echo "✅ Database reset complete!"
+
+db-recreate: db-reset
+    @echo "🏗️  Re-creating database schema..."
+    @sleep 5  # Extra wait for PostgreSQL to fully initialize
+    @echo "✅ Database recreated with schema!"
+
+db-psql:
+    @echo "🐘 Connecting to PostgreSQL..."
+    docker-compose exec postgres psql -U postgres -d ecommerce
+
+db-backup name="backup":
+    @echo "💾 Creating database backup..."
+    docker-compose exec postgres pg_dump -U postgres -d ecommerce > backups/{{name}}_$(date +%Y%m%d_%H%M%S).sql
+    @echo "✅ Backup saved to backups/{{name}}_$(date +%Y%m%d_%H%M%S).sql"
+
+db-restore file:
+    @echo "📥 Restoring database from {{file}}..."
+    @echo "⚠️  This will OVERWRITE the current database. Continue? [y/N]"
+    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
+    docker-compose exec -T postgres psql -U postgres -d ecommerce < {{file}}
+    @echo "✅ Database restored!"
+
+db-status:
+    @echo "📊 Database Status"
+    @echo "=================="
+    @docker-compose exec postgres psql -U postgres -d ecommerce -c "\l" | grep ecommerce || echo "Database not found"
+    @echo ""
+    @echo "Tables:"
+    @docker-compose exec postgres psql -U postgres -d ecommerce -c "\dt ecommerce.*" 2>/dev/null || echo "No tables found"
+    @echo ""
+    @echo "Size:"
+    @docker-compose exec postgres psql -U postgres -d ecommerce -c "SELECT pg_size_pretty(pg_database_size('ecommerce'));" -t 2>/dev/null || echo "N/A"
+
+db-logs:
+    @docker-compose logs -f postgres --tail=50
+
+db-test:
+    @echo "🧪 Testing database connection..."
+    @docker-compose exec postgres psql -U postgres -d ecommerce -c "SELECT 'Database connection successful!' as status;" -t 2>/dev/null && echo "✅ Database test passed!" || echo "❌ Database test failed!"
+
+db-exec sql:
+    @echo "⚡ Executing SQL: {{sql}}"
+    @docker-compose exec postgres psql -U postgres -d ecommerce -c "{{sql}}"
+
+db-run file:
+    @echo "📄 Running SQL file: {{file}}"
+    @docker-compose exec -T postgres psql -U postgres -d ecommerce < {{file}}
+    @echo "✅ SQL file executed!"
 
 # Generate synthetic data
 generate-data:
