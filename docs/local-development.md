@@ -271,7 +271,7 @@ sleep 10
 
 ```bash
 # Start complete development environment
-make dev                    # Starts all services via docker-compose
+just up                     # Starts all services via docker-compose
 
 # Check service health
 docker-compose ps          # View all service statuses

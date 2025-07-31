@@ -20,6 +20,12 @@ export PATH="$PWD/scripts:$PATH"
 awslocal s3 ls
 ```
 
+## 📖 Documentation
+
+- **[Development Rulebook](docs/development-rulebook.md)** - Essential development practices and standards
+- **[Documentation Index](docs/README.md)** - Complete guide to all documentation
+- **[Local Development](docs/local-development.md)** - Environment setup and daily workflow
+
 ### Alternative AWS CLI usage:
 ```bash
 # Source environment and use alias
@@ -37,10 +43,11 @@ aws --endpoint-url=http://localhost:4566 s3 ls
 ```
 ecommerce-data-platform/
 ├── docs/                           # Technical documentation
-│   ├── python-setup.md             # UV & Ruff modern Python setup
-│   ├── docker-guide.md             # Multi-stage containerization
+│   ├── README.md                   # Documentation index
+│   ├── development-rulebook.md     # Concise development standards
 │   ├── local-development.md        # LocalStack AWS emulation
-│   └── modern-data-engineering-setup.md # 2025 best practices
+│   ├── database-migrations.md      # Schema management guide
+│   └── [Additional guides...]      # Specialized documentation
 ├── roadmap/                        # Project planning
 │   ├── initial-roadmap.md          # 2-month implementation plan
 │   ├── project-basic-roadmap.md    # Basic roadmap
@@ -70,24 +77,20 @@ ecommerce-data-platform/
 
 ```bash
 # Code quality (Rust-powered, ultra-fast)
-make format                         # Format with Ruff
-make lint                          # Lint with Ruff + mypy
-make check                         # Run all quality checks
+just fmt                           # Format with Ruff
+just lint                          # Lint with Ruff + mypy
+just check-all                     # Run all quality checks
 
 # Testing
-make test                          # Run all tests
-make test-watch                    # Continuous testing (TDD)
+just test                          # Run all tests
+just test-cov                      # Run tests with coverage
 
-# Data platform
-make docs                          # Generate dbt documentation
+# Database operations
+just migrate                       # Run database migrations
+just db-status                     # Check database status
 awslocal s3 ls                     # Interact with local AWS
 ```
 
-## 📖 Documentation
-
-- **[CLAUDE.md](CLAUDE.md)** - Quick reference and AI assistant guidance
-- **[docs/](docs/)** - Comprehensive technical documentation
-- **[roadmap/](roadmap/)** - Project planning and implementation roadmaps
 
 ## 🎯 Key Features
 
