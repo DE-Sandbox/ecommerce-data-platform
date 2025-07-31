@@ -1,314 +1,111 @@
-# CLAUDE.md
+# CLAUDE.md - AI Agent Instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Critical Rules
 
-## Working Directory Guidelines
+1. **Working Directory**: Always operate from project root
+2. **Commands**: Use `just` (not `make`) - see `justfile` for all commands
+3. **Python**: Use `uv` package manager, Python 3.13+, strict typing
+4. **Git**: No AI attribution in commits, use trunk-based development
+5. **Testing**: Follow TDD - write tests first, then implementation
 
-**ALWAYS work from the project root directory unless specifically required otherwise:**
-- Default working directory: `<project-root>` (where this CLAUDE.md file is located)
-- Return to root directory after any subdirectory operations
-- Use relative paths from project root in commands and documentation
-- Only change to subdirectories when explicitly needed for specific operations
+## Quick Commands
 
-**Directory change examples:**
 ```bash
-# ✅ Good: Run commands from project root
-just tf-apply
-uv run ruff check src/
+# Environment
+just setup          # Initial setup
+just up            # Start services
+just down          # Stop services
 
-# ❌ Avoid: Working from subdirectories unless necessary  
-cd terraform/environments/local && terraform apply
+# Development
+just lint          # Run linters (ruff + mypy)
+just fmt           # Format code
+just test          # Run tests
+just test-cov      # Test with coverage
+
+# Database
+just migrate       # Apply migrations
+just migrate-new "name"  # Create migration
+just db-status     # Check database
+
+# Common workflow
+just lint && just test  # Before committing
 ```
 
-## Configuration Management Guidelines
+## Code Standards
 
-**ALWAYS use configuration files instead of hardcoding values:**
-- ✅ Create reusable YAML configuration files in the `config/` directory
-- ✅ Use environment variable substitution with `${VAR:-default}` syntax
-- ✅ Separate configuration by environment (development, test, production)
-- ✅ Use the `ConfigLoader` class from `src/core/config.py` to load configurations
-- ❌ NEVER hardcode database credentials, API keys, or URLs in source code
-- ❌ NEVER commit sensitive configuration values
+### Python MUST-HAVES
 
-**Configuration file structure:**
-- `config/database.yaml` - Database connections and settings
-- `config/application.yaml` - Application settings and feature flags
-- `config/services.yaml` - External service configurations (when needed)
-
-## Python Development Standards
-
-**ALWAYS follow strict type safety and code quality rules:**
-- ✅ Type annotate ALL functions and class methods (including `-> None` for procedures)
-- ✅ Use modern Python 3.13+ type syntax (`type` keyword, `X | Y` unions)
-- ✅ Run `uv run ruff check . --fix` before committing
-- ✅ Ensure all tests pass with `uv run pytest tests/`
-- ❌ NEVER use `typing.Any` - define specific types instead
-- ❌ NEVER use `os.path` - use `pathlib.Path` instead
-- ❌ NEVER commit code that fails linting
-
-**Type definitions example:**
 ```python
-# Define reusable types
-type ConfigValue = str | int | float | bool | list[ConfigValue] | dict[str, ConfigValue] | None
-type ConfigDict = dict[str, ConfigValue]
+# ✅ ALWAYS
+from pathlib import Path         # Never os.path
+def process(data: str) -> int:   # Always type hints
+async with session:              # Context managers
+
+# ❌ NEVER
+def process(data: Any):          # No Any type
+os.path.join()                   # Use Path instead
+hardcoded_url = "localhost:5432" # Use config files
 ```
 
-**For detailed Python rules, see:** `docs/python-development-rules.md`
-**For Docker and container guidelines, see:** `docs/docker-guide.md`
+### Configuration
 
-## Git Commit Guidelines
+- Store in `config/*.yaml` files
+- Use `${ENV_VAR:-default}` syntax
+- Load with `src/core/config.py:ConfigLoader`
 
-**NEVER include AI attribution in commit messages:**
-- ❌ Do NOT add "Generated with Claude Code" or similar
-- ❌ Do NOT add "Co-Authored-By: Claude" lines
-- ✅ Write clean, professional commit messages focused on the changes
-- ✅ Use conventional commit format when appropriate
+## Project Context
 
-## Core Development Principles
+**E-commerce Data Platform**: AWS lakehouse architecture demonstration
 
-### 1. Test-Driven Development (TDD)
-**ALWAYS use TDD approach where possible:**
-- Write tests BEFORE implementing functionality
-- Follow the Red-Green-Refactor cycle:
-  1. Write a failing test (Red)
-  2. Write minimal code to pass the test (Green)
-  3. Refactor while keeping tests passing
-- For data pipelines: Write data quality tests before transformations
-- For APIs: Write integration tests before implementing endpoints
-- For dbt models: Write model tests before creating the SQL
+- **Stack**: PostgreSQL, Dagster, dbt, Delta Lake, LocalStack
+- **Async**: SQLAlchemy 2.0 with asyncpg
+- **Testing**: pytest-asyncio, testcontainers
 
-### 2. Documentation Maintenance
-**ALWAYS keep documentation up-to-date:**
-- Update documentation IMMEDIATELY after code changes
-- Run post-processing checks to confirm documentation updates
-- Documentation includes:
-  - Code comments for complex logic
-  - README files for new modules
-  - API documentation for new endpoints
-  - dbt model descriptions
-  - Dagster asset descriptions
-- After any code change, verify:
-  - CLAUDE.md reflects new patterns or commands
-  - README.md includes new setup steps if needed
-  - Inline documentation matches implementation
+## File Locations
 
-## Project Overview
+```text
+src/
+├── core/          # Config, utilities
+├── models/        # SQLAlchemy models
+├── database/      # Functions, migrations
+└── services/      # Business logic
 
-This is an e-commerce data engineering platform implementing a modern lakehouse architecture on AWS. The project demonstrates CDC streaming, batch processing, and comprehensive orchestration patterns suitable for production deployment.
-
-## Architecture Overview
-
-### Data Flow
-- **Source Systems**: PostgreSQL (OLTP), DynamoDB (NoSQL), S3 (Object Storage)
-- **Ingestion**: Debezium CDC → Kafka/Kinesis → Delta Lake
-- **Processing**: Dagster orchestration with dbt transformations
-- **Storage**: Delta Lake on S3 with AWS Glue Catalog
-- **Analytics**: Amazon Athena and EMR Serverless
-
-### Technology Stack
-- **Local Development**: Docker, LocalStack, Testcontainers
-- **Streaming**: Debezium, Kafka/Redpanda (local), Kinesis (AWS)
-- **Batch Processing**: dlthub with custom connectors
-- **Orchestration**: Dagster with asset-based pipelines
-- **Transformation**: dbt Core for data modeling
-- **Storage Format**: Delta Lake (with Iceberg migration path)
-
-## Common Commands
-
-### Local Development Setup
-```bash
-# Start all services (databases are initialized automatically via docker-entrypoint-initdb.d)
-docker-compose up -d
-
-# Wait for services to be healthy
-docker-compose ps
-
-# Create S3 buckets in LocalStack (if not auto-created)
-aws --endpoint-url=http://localhost:4566 s3 mb s3://data-lake
-aws --endpoint-url=http://localhost:4566 s3 mb s3://staging
+tests/             # Mirror src structure
+config/            # YAML configurations
+docs/              # Documentation
 ```
-
-### Python Environment
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
-```
-
-### Testing
-```bash
-# Run all tests
-pytest tests/
-
-# Run specific test categories
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/e2e/
-
-# Run tests with coverage
-pytest --cov=src --cov-report=html
-
-# Run tests in watch mode (for TDD)
-pytest-watch
-
-# Run documentation tests
-pytest --doctest-modules src/
-```
-
-### Code Quality & Linting
-```bash
-# Python linting and formatting
-black src/ tests/                    # Format Python code
-isort src/ tests/                    # Sort imports
-flake8 src/ tests/                   # Check style and complexity
-mypy src/                            # Type checking
-bandit -r src/                       # Security linting
-
-# SQL linting (dbt models)
-sqlfluff lint models/                # Lint SQL files
-sqlfluff fix models/                 # Auto-fix SQL issues
-
-# YAML/JSON linting
-yamllint .                           # Lint YAML files
-jsonlint **/*.json                   # Lint JSON files
-
-# Run all linters
-make lint                            # Run complete linting suite
-
-# Pre-commit hooks (run automatically on commit)
-pre-commit install                   # Install hooks
-pre-commit run --all-files          # Run all hooks manually
-```
-
-### dbt Commands
-```bash
-# Run dbt models
-dbt run
-
-# Test dbt models
-dbt test
-
-# Generate and serve documentation
-dbt docs generate && dbt docs serve
-```
-
-### Synthetic Data Generation
-```bash
-# Start synthetic data API
-python src/synthetic_data/api.py
-
-# Generate test data
-curl -X POST http://localhost:8000/api/generate/customers?count=1000
-curl -X POST http://localhost:8000/api/generate/orders?count=5000
-```
-
-## Key Directories and Files
-
-### Project Structure
-- `src/synthetic_data/` - Synthetic data generation APIs
-- `src/ingestion/` - CDC and batch ingestion pipelines
-- `src/orchestration/` - Dagster pipeline definitions
-- `models/` - dbt transformation models
-- `tests/` - Unit, integration, and e2e tests
-- `docker/` - Docker configurations and Dockerfiles
-- `terraform/` - AWS infrastructure as code
-
-### Important Configuration Files
-- `docker-compose.yml` - Local service orchestration
-- `.env` - Environment variables (AWS keys, service configs)
-- `dagster.yaml` - Dagster configuration
-- `dbt_project.yml` - dbt project configuration
-- `requirements.txt` - Python dependencies
 
 ## Development Workflow
 
-### TDD Development Cycle
-1. **Write Test First**: Create failing test for new functionality
-2. **Implement Minimal Code**: Make the test pass with simplest solution
-3. **Refactor**: Improve code while keeping tests green
-4. **Update Documentation**: Immediately update relevant docs
-5. **Run Documentation Checks**: Verify all docs are current
+1. **Before coding**: Read existing code patterns
+2. **TDD cycle**: Test → Code → Refactor
+3. **Before commit**: `just lint && just test`
+4. **Documentation**: Update immediately with code changes
 
-### Daily Development Process
-1. **Local Services**: Always start with `docker-compose up -d`
-2. **Test Watch**: Run `pytest-watch` for continuous testing during TDD
-3. **Dagster UI**: Access at http://localhost:3000 for pipeline monitoring
-4. **LocalStack**: AWS service emulation at http://localhost:4566
-5. **Redpanda Console**: Kafka monitoring at http://localhost:8080
+## Common Tasks
 
+### Add new model
 
-### Post-Development Checklist
-After any code change, ALWAYS verify:
-- [ ] All tests pass (`pytest tests/`)
-- [ ] All linters pass (`make lint` or individual linters)
-- [ ] Pre-commit hooks pass (`pre-commit run --all-files`)
-- [ ] Type checking passes (`mypy src/`)
-- [ ] Security checks pass (`bandit -r src/`)
-- [ ] Documentation updated (README, CLAUDE.md, inline docs)
-- [ ] dbt documentation regenerated (`dbt docs generate`)
-- [ ] No broken links in documentation
-- [ ] Code coverage maintained or improved
+1. Create test in `tests/models/test_*.py`
+2. Create model in `src/models/*.py`
+3. Run `just migrate-new "add model"`
+4. Review and apply migration
 
-## Testing Strategy
+### Fix linting
 
-### TDD Testing Hierarchy
-- **Unit Tests**: Test individual functions and transformations (write FIRST)
-- **Integration Tests**: Use testcontainers for service integration
-- **Data Quality**: dbt tests and Great Expectations checks (define before models)
-- **E2E Tests**: Full pipeline validation from source to analytics
-- **Documentation Tests**: Verify code examples in docs work
-
-### Testing Best Practices
-- Write tests before implementation (TDD)
-- Use descriptive test names that explain business value
-- Test edge cases and error conditions
-- Maintain test data fixtures for consistency
-- Mock external dependencies in unit tests
-- Use property-based testing for data transformations
-
-## AWS Deployment Notes
-
-The platform is designed for AWS deployment with:
-- S3 for data lake storage with lifecycle policies
-- Kinesis Data Streams for real-time ingestion
-- EMR Serverless for heavy processing
-- Athena for interactive queries
-- Estimated monthly cost: ~$45-50
-
-## Key Implementation Patterns
-
-1. **CDC Implementation**: Uses Debezium for change data capture with exactly-once processing
-2. **Incremental Processing**: dbt incremental models with late-arriving data handling
-3. **Asset-Based Orchestration**: Dagster assets with partitioned backfilling
-4. **Schema Evolution**: Handled through Delta Lake and careful versioning
-5. **Cost Optimization**: Partitioning, compression, and lifecycle policies
-
-## Documentation Maintenance Commands
-
-### Pre-commit Documentation Checks
 ```bash
-# Check for outdated documentation
-python scripts/check_docs.py
-
-# Validate code examples in documentation
-pytest --doctest-modules docs/
-
-# Check for broken links
-markdown-link-check README.md docs/**/*.md
-
-# Regenerate API documentation
-sphinx-build -b html docs/ docs/_build/
-
-# Update dbt documentation
-dbt docs generate && dbt docs serve --port 8001
+just fmt           # Auto-fix formatting
+just lint          # Check remaining issues
 ```
 
-### Documentation Update Workflow
-When making code changes:
-1. Update relevant docstrings immediately
-2. Regenerate API docs if interfaces changed
-3. Update README.md for new features or setup changes
-4. Update CLAUDE.md for new commands or patterns
-5. Run documentation validation checks
-6. Commit documentation changes with code changes
+### Debug tests
+
+```bash
+just test tests/path/to/test.py::test_name -v
+```
+
+## References
+
+- **Detailed rules**: `docs/development-rulebook.md`
+- **Local setup**: `docs/local-development.md`
+- **All commands**: `justfile`
