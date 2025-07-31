@@ -29,7 +29,7 @@
 - [x] Test upgrade/downgrade procedures
 - [x] Refactor to use Alembic as single source of truth for tables
 - [x] Create documentation for migration workflow
-- [ ] Create seed data migration
+- [ ] Create minimal reference data migration (currencies, statuses only)
 
 ### 3. Data Quality Framework (1 hour) ⏸️ **DEFER TO DAY 3**
 - [ ] ~~Integrate Great Expectations~~ (complexity not needed yet)
@@ -49,6 +49,13 @@
 
 ## Day 2 Afternoon Session: APIs, Synthetic Data & Monitoring
 
+### 0. Architect-Recommended Data Strategy 🏗️ **NEW APPROACH**
+Implement layered data strategy:
+- [ ] **Reference Data** (via migration): Currencies, order statuses, payment types
+- [ ] **Bootstrap Service**: Minimal operational data endpoint
+- [ ] **Synthetic Data API**: Full test data generation
+- [ ] **Scenario-Based Generators**: Complex e-commerce patterns
+
 ### 1. FastAPI Application Setup (1.5 hours) 🎯 **HIGH PRIORITY**
 - [ ] Create src/api/ structure with routers
 - [ ] Set up async SQLAlchemy 2.0 sessions
@@ -58,17 +65,19 @@
 - [ ] Enable auto-generated OpenAPI docs
 - [ ] Add CORS and security middleware
 
-### 2. Synthetic Data Generation (1.5 hours) 🎯 **HIGH PRIORITY**
-- [ ] Set up Factory Boy for consistent data
-- [ ] Create realistic e-commerce patterns:
-  - [ ] Customer personas with behavior
-  - [ ] Product catalog with realistic pricing
-  - [ ] Order flows with proper state
-- [ ] Add temporal patterns (peak hours, seasons)
+### 2. Synthetic Data Generation (1.5 hours) 🎯 **ARCHITECT-ALIGNED**
+- [ ] Create layered data generation framework:
+  - [ ] Base `DataGenerator` abstract class
+  - [ ] Model-specific generators (CustomerGenerator, ProductGenerator)
+  - [ ] Scenario-based generators (BlackFridayScenario, SeasonalScenario)
+- [ ] Implement Factory Boy patterns for consistency
 - [ ] Build REST endpoints:
-  - [ ] POST /api/synthetic/generate
-  - [ ] POST /api/synthetic/stream
-- [ ] Add CLI commands to justfile
+  - [ ] POST /api/synthetic/reference-data (minimal bootstrap)
+  - [ ] POST /api/synthetic/generate/{model}
+  - [ ] POST /api/synthetic/scenarios/{scenario}
+  - [ ] POST /api/synthetic/bulk-generate
+- [ ] Add progress tracking for large datasets
+- [ ] Create CLI commands in justfile
 
 ### 3. Observability Setup (1 hour) 🚀 **QUICK WIN**
 - [ ] Add Prometheus + Grafana to docker-compose
@@ -120,18 +129,26 @@
 - [ ] CDC events visible in Redpanda Console
 - [ ] All health checks passing
 
-## Adjusted Execution Order
+## Architect-Recommended Execution Order
 
-**Morning (3-4 hours)**:
-1. Alembic setup (critical for safe development)
-2. FastAPI structure with basic endpoints
-3. Start synthetic data framework
+**Phase 1: Foundation (1 hour)**
+1. Create minimal reference data migration (currencies, statuses)
+2. Set up FastAPI project structure with proper layering
 
-**Afternoon (3-4 hours)**:
-4. Complete synthetic data with API
-5. Add monitoring stack
-6. Set up CDC pipeline
-7. Test everything together
+**Phase 2: Core API (2 hours)**
+3. Build FastAPI with async SQLAlchemy sessions
+4. Generate Pydantic models from SQLAlchemy
+5. Create health/readiness endpoints
+
+**Phase 3: Data Generation Framework (2 hours)**
+6. Implement base DataGenerator classes
+7. Create model-specific generators
+8. Build synthetic data API endpoints
+
+**Phase 4: Advanced Features (2 hours)**
+9. Add scenario-based generators
+10. Implement bulk generation with progress tracking
+11. Set up monitoring stack (if time permits)
 
 ## Key Architecture Decisions
 
