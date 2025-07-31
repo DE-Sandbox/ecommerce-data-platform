@@ -86,7 +86,7 @@ clean:
 # Deep clean (including database volumes)
 clean-all: clean
     @echo "⚠️  This will DELETE all Docker volumes including database data. Continue? [y/N]"
-    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
+    @bash -c 'read -r response; [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)'
     @echo "🗑️  Removing all Docker volumes..."
     docker volume prune -f
     @echo "✨ Deep clean complete!"
@@ -102,7 +102,7 @@ check-aws:
 deploy profile="personal":
     @echo "🚀 Deploying to AWS with profile: {{profile}}"
     @echo "⚠️  This will deploy real AWS resources. Continue? [y/N]"
-    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
+    @bash -c 'read -r response; [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)'
     aws-vault exec {{profile}} -- terraform apply
 
 # Local development with hot reload
@@ -170,18 +170,23 @@ db-restart: db-down db-up
     @echo "🔄 Database restarted!"
 
 db-reset:
-    @echo "⚠️  This will DELETE all data in the database. Continue? [y/N]"
-    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
-    @echo "🗑️  Resetting database..."
+    #!/usr/bin/env bash
+    echo "⚠️  This will DELETE all data in the database. Continue? [y/N]"
+    read -r response
+    if [ "$response" != "y" ]; then
+        echo "Cancelled"
+        exit 1
+    fi
+    echo "🗑️  Resetting database..."
     docker-compose down postgres
     docker volume rm ecommerce-data-platform_postgres_data || true
     docker-compose up -d postgres
-    @echo "⏳ Waiting for database to be ready..."
-    @while ! docker-compose exec postgres pg_isready -q; do \
-        echo "Waiting for PostgreSQL..."; \
-        sleep 2; \
+    echo "⏳ Waiting for database to be ready..."
+    while ! docker-compose exec postgres pg_isready -q; do
+        echo "Waiting for PostgreSQL..."
+        sleep 2
     done
-    @echo "✅ Database reset complete!"
+    echo "✅ Database reset complete!"
 
 db-recreate: db-reset
     @echo "🏗️  Re-creating database schema..."
@@ -200,7 +205,7 @@ db-backup name="backup":
 db-restore file:
     @echo "📥 Restoring database from {{file}}..."
     @echo "⚠️  This will OVERWRITE the current database. Continue? [y/N]"
-    @read -r response && [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)
+    @bash -c 'read -r response; [ "$$response" = "y" ] || (echo "Cancelled" && exit 1)'
     docker-compose exec -T postgres psql -U postgres -d ecommerce < {{file}}
     @echo "✅ Database restored!"
 
