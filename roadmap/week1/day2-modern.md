@@ -29,7 +29,7 @@
 - [x] Test upgrade/downgrade procedures
 - [x] Refactor to use Alembic as single source of truth for tables
 - [x] Create documentation for migration workflow
-- [ ] Create minimal reference data migration (currencies, statuses only)
+- [x] Create minimal reference data migration (currencies, statuses only)
 
 ### 3. Data Quality Framework (1 hour) ⏸️ **DEFER TO DAY 3**
 - [ ] ~~Integrate Great Expectations~~ (complexity not needed yet)
@@ -50,11 +50,14 @@
 ## Day 2 Afternoon Session: APIs, Synthetic Data & Monitoring
 
 ### 0. Architect-Recommended Data Strategy 🏗️ **NEW APPROACH**
+
+
 Implement layered data strategy:
 - [ ] **Reference Data** (via migration): Currencies, order statuses, payment types
 - [ ] **Bootstrap Service**: Minimal operational data endpoint
 - [ ] **Synthetic Data API**: Full test data generation
 - [ ] **Scenario-Based Generators**: Complex e-commerce patterns
+- [ ] 
 
 ### 1. FastAPI Application Setup (1.5 hours) 🎯 **HIGH PRIORITY**
 - [ ] Create src/api/ structure with routers
