@@ -95,6 +95,7 @@ module = [
     "sqlalchemy.*",
     "asyncpg.*",
     "alembic.*",
+    "alembic_utils.*",
 ]
 ignore_missing_imports = true
 

@@ -38,7 +38,7 @@ lint:
     @echo "🔍 Running linters..."
     uv run ruff check src/ tests/
     uv run ruff format --check src/ tests/
-    uv run mypy src/
+    uv run mypy src/ tests/
 
 # Format code
 fmt:

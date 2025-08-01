@@ -25,7 +25,13 @@ class TestConfigLoader:
         assert config["engine"] == "postgresql"
         assert config["database"] == "ecommerce"
         # Check schema names
-        schema_names = [s["name"] for s in config["schema"]["schemas"]]
+        schema_config = config.get("schema")
+        assert isinstance(schema_config, dict)
+        schemas_list = schema_config.get("schemas")
+        assert isinstance(schemas_list, list)
+        schema_names = [
+            s["name"] for s in schemas_list if isinstance(s, dict) and "name" in s
+        ]
         assert schema_names == ["ecommerce", "audit", "archive"]
 
     def test_environment_variable_substitution(
@@ -61,7 +67,11 @@ class TestConfigLoader:
         # Test nested access
         schemas = loader.get("database", "schema.schemas")
         assert isinstance(schemas, list)
-        assert "ecommerce" in [s["name"] for s in schemas]
+        # Type-safe access to schema names
+        schema_names = [
+            s["name"] for s in schemas if isinstance(s, dict) and "name" in s
+        ]
+        assert "ecommerce" in schema_names
 
         # Test default value for non-existent key
         missing = loader.get("database", "non.existent.key", "default-value")
@@ -71,8 +81,9 @@ class TestConfigLoader:
         """Test database URL generation."""
         url = get_database_url("development")
         assert (
-            url == "postgresql://postgres:postgres@localhost:5432/ecommerce"
-        )  # pragma: allowlist secret
+            url
+            == "postgresql://postgres:postgres@localhost:5432/ecommerce"  # pragma: allowlist secret
+        )
 
     def test_feature_flags(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test feature flag checking."""
@@ -122,7 +133,9 @@ class TestConfigLoader:
         loader.reload()
 
         app_config = loader.load("application")
-        assert app_config["app"]["debug"] is False
+        app = app_config.get("app")
+        assert isinstance(app, dict)
+        assert app["debug"] is False
         assert is_feature_enabled("stream_processing") is True
 
 
@@ -181,7 +194,7 @@ class TestConfigValidation:
         with pytest.raises(
             ConfigValidationError, match="Invalid type for field 'port'"
         ):
-            loader.validate_field_types(bad_config, field_types)
+            loader.validate_field_types(bad_config, field_types)  # type: ignore[arg-type]
 
     def test_validate_port_range(self) -> None:
         """Test that port numbers are in valid range."""

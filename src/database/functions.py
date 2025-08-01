@@ -1,7 +1,7 @@
 """Database functions and triggers managed by alembic_utils."""
 
-from alembic_utils.pg_function import PGFunction  # type: ignore[import-not-found]
-from alembic_utils.pg_trigger import PGTrigger  # type: ignore[import-not-found]
+from alembic_utils.pg_function import PGFunction
+from alembic_utils.pg_trigger import PGTrigger
 
 # UUID v7 generation function
 uuid_generate_v7 = PGFunction(

@@ -225,14 +225,17 @@ class TestOrderModel:
         # Cancel order
         order.status = "cancelled"
         order.cancelled_at = datetime.now(UTC)
-        order.cancellation_reason = "Customer requested cancellation"
+        # Store cancellation reason in metadata - update dict in place
+        metadata = dict(order.order_metadata)
+        metadata["cancellation_reason"] = "Customer requested cancellation"
+        order.order_metadata = metadata
         await async_session.commit()
 
         # Verify cancellation
         await async_session.refresh(order)
         assert order.status == "cancelled"
         assert order.cancelled_at is not None
-        assert order.cancellation_reason is not None
+        assert "cancellation_reason" in order.order_metadata
 
     @pytest.mark.asyncio
     async def test_order_with_promo_code(

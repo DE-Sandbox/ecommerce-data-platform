@@ -56,7 +56,15 @@ class TestDatabaseInitialization:
     ) -> None:
         """Test that all required schemas from config are created."""
         # Get expected schemas from configuration
-        expected_schemas = {schema["name"] for schema in db_config["schema"]["schemas"]}
+        schema_config = db_config.get("schema")
+        assert isinstance(schema_config, dict)
+        schemas_list = schema_config.get("schemas")
+        assert isinstance(schemas_list, list)
+        expected_schemas = {
+            schema["name"]
+            for schema in schemas_list
+            if isinstance(schema, dict) and "name" in schema
+        }
 
         with db_engine.connect() as conn:
             result = conn.execute(
@@ -90,7 +98,10 @@ class TestDatabaseInitialization:
     ) -> None:
         """Test that all tables from config are created."""
         # Get expected tables from configuration
-        expected_tables_by_schema = db_config["schema"]["tables"]
+        schema_config = db_config.get("schema")
+        assert isinstance(schema_config, dict)
+        expected_tables_by_schema = schema_config.get("tables")
+        assert isinstance(expected_tables_by_schema, dict)
 
         inspector = inspect(db_engine)
 
@@ -99,6 +110,7 @@ class TestDatabaseInitialization:
             if not expected_tables:  # Skip empty schemas like archive
                 continue
 
+            assert isinstance(expected_tables, list)
             actual_tables = set(inspector.get_table_names(schema=schema))
             expected_set = set(expected_tables)
 

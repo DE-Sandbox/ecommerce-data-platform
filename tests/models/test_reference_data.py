@@ -40,13 +40,13 @@ class TestReferenceData:
         smartphone = result.scalar_one()
 
         # Get its prices
-        result = await async_session.execute(
+        price_result = await async_session.execute(
             select(ProductPrice).where(ProductPrice.product_id == smartphone.id)
         )
-        prices = result.scalars().all()
+        prices = list(price_result.scalars().all())
 
         # Should have prices in multiple currencies
-        currencies = {p.currency_code for p in prices}
+        currencies = {price.currency_code for price in prices}
         assert "USD" in currencies
         assert "EUR" in currencies
         assert "GBP" in currencies

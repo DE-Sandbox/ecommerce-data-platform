@@ -2,6 +2,7 @@
 
 import pytest
 from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.customer import Customer, CustomerPII
 from src.models.product import Category, Product, ProductPrice
@@ -11,13 +12,13 @@ class TestBasicModelOperations:
     """Test basic CRUD operations for key models."""
 
     @pytest.mark.asyncio
-    async def test_database_connection(self, async_session) -> None:
+    async def test_database_connection(self, async_session: AsyncSession) -> None:
         """Test that we can connect to the database."""
         result = await async_session.execute(text("SELECT 1"))
         assert result.scalar() == 1
 
     @pytest.mark.asyncio
-    async def test_create_customer_with_pii(self, async_session) -> None:
+    async def test_create_customer_with_pii(self, async_session: AsyncSession) -> None:
         """Test creating a customer with PII data."""
         import uuid
 
@@ -53,7 +54,7 @@ class TestBasicModelOperations:
         assert found.id == customer.id
 
     @pytest.mark.asyncio
-    async def test_create_product_with_price(self, async_session) -> None:
+    async def test_create_product_with_price(self, async_session: AsyncSession) -> None:
         """Test creating a product with pricing."""
         import uuid
 
@@ -93,7 +94,7 @@ class TestBasicModelOperations:
         assert float(price.price) == 99.99
 
     @pytest.mark.asyncio
-    async def test_uuid_v7_generation(self, async_session) -> None:
+    async def test_uuid_v7_generation(self, async_session: AsyncSession) -> None:
         """Test that UUID v7 is properly generated."""
         import uuid
 
@@ -114,7 +115,7 @@ class TestBasicModelOperations:
         assert customer1.id != customer2.id
 
     @pytest.mark.asyncio
-    async def test_soft_delete(self, async_session) -> None:
+    async def test_soft_delete(self, async_session: AsyncSession) -> None:
         """Test soft delete functionality."""
         import uuid
         from datetime import UTC, datetime
@@ -139,7 +140,7 @@ class TestBasicModelOperations:
         assert found.is_deleted is True
 
     @pytest.mark.asyncio
-    async def test_cascade_relationships(self, async_session) -> None:
+    async def test_cascade_relationships(self, async_session: AsyncSession) -> None:
         """Test that cascade delete works properly."""
         # Create customer
         customer = Customer(email="cascade@example.com")
