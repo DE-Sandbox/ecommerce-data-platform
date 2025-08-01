@@ -103,13 +103,58 @@ class TestMigrationCommands:
             # Unexpected error
             pytest.fail(f"Unexpected error: {result.stderr}")
 
-    @pytest.mark.skip(reason="Requires database connection")
     def test_migration_up_down(self) -> None:
         """Test migration up and down commands."""
-        # This test would require a test database and is skipped by default
-        # In a real test environment, you would:
-        # 1. Run migrate-down to go to base
-        # 2. Run migrate to go to head
-        # 3. Verify tables exist
-        # 4. Run migrate-down again
-        # 5. Verify tables are gone
+        # Get current revision first
+        current_result = subprocess.run(
+            ["uv", "run", "alembic", "current"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+
+        # Save current state
+        current_revision = (
+            current_result.stdout.strip().split()[0] if current_result.stdout else None
+        )
+
+        # Test downgrade one revision
+        downgrade_result = subprocess.run(
+            ["uv", "run", "alembic", "downgrade", "-1"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+
+        assert (
+            downgrade_result.returncode == 0
+        ), f"Downgrade failed: {downgrade_result.stderr}"
+
+        # Test upgrade back to head
+        upgrade_result = subprocess.run(
+            ["just", "migrate"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+
+        assert (
+            upgrade_result.returncode == 0
+        ), f"Upgrade failed: {upgrade_result.stderr}"
+
+        # Verify we're back at the same revision
+        final_result = subprocess.run(
+            ["uv", "run", "alembic", "current"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+
+        if current_revision:
+            assert (
+                current_revision in final_result.stdout
+            ), "Not at expected revision after up/down cycle"

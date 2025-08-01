@@ -17,12 +17,14 @@ class AuditLog(Base):
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=False),
         primary_key=True,
-        server_default=text("UUID_GENERATE_V7()"),
+        server_default=text("uuid_generate_v7()"),
         nullable=False,
     )
     table_name: Mapped[str] = mapped_column(String(255), nullable=False)
     record_id: Mapped[UUID] = mapped_column(UUID(as_uuid=False), nullable=False)
-    action: Mapped[str] = mapped_column(String(10), nullable=False)  # INSERT, UPDATE, DELETE
+    action: Mapped[str] = mapped_column(
+        String(10), nullable=False
+    )  # INSERT, UPDATE, DELETE
     user_id: Mapped[UUID | None] = mapped_column(UUID(as_uuid=False), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

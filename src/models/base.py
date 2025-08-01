@@ -84,11 +84,11 @@ class BaseModel(Base, TimestampMixin, SoftDeleteMixin):
 
     __abstract__ = True
 
-    # Use UUID type with PostgreSQL's UUID_GENERATE_V7() function
+    # Use UUID type with PostgreSQL's uuid_generate_v7() function
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=False),  # Store as UUID type, not Python uuid
         primary_key=True,
-        server_default=text("UUID_GENERATE_V7()"),
+        server_default=text("uuid_generate_v7()"),
         nullable=False,
     )
 
@@ -102,11 +102,11 @@ class BaseModelNoSoftDelete(Base, TimestampMixin):
 
     __abstract__ = True
 
-    # Use UUID type with PostgreSQL's UUID_GENERATE_V7() function
+    # Use UUID type with PostgreSQL's uuid_generate_v7() function
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=False),  # Store as UUID type, not Python uuid
         primary_key=True,
-        server_default=text("UUID_GENERATE_V7()"),
+        server_default=text("uuid_generate_v7()"),
         nullable=False,
     )
 

@@ -30,7 +30,9 @@ class Customer(BaseModel, VersionMixin):
     __tablename__ = "customers"
 
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    email_verified: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("FALSE"))
+    email_verified: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("FALSE")
+    )
     status: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
@@ -43,14 +45,24 @@ class Customer(BaseModel, VersionMixin):
         default="individual",
         server_default=text("'individual'"),
     )
-    customer_metadata: Mapped[dict] = mapped_column(JSONB, default={}, server_default=text("'{}'::jsonb"))
+    customer_metadata: Mapped[dict] = mapped_column(
+        JSONB, default={}, server_default=text("'{}'::jsonb")
+    )
 
     # Relationships
-    pii: Mapped["CustomerPII"] = relationship(back_populates="customer", uselist=False, cascade="all, delete-orphan")
-    addresses: Mapped[list["Address"]] = relationship(back_populates="customer", cascade="all, delete-orphan")
-    consents: Mapped[list["CustomerConsent"]] = relationship(back_populates="customer", cascade="all, delete-orphan")
+    pii: Mapped["CustomerPII"] = relationship(
+        back_populates="customer", uselist=False, cascade="all, delete-orphan"
+    )
+    addresses: Mapped[list["Address"]] = relationship(
+        back_populates="customer", cascade="all, delete-orphan"
+    )
+    consents: Mapped[list["CustomerConsent"]] = relationship(
+        back_populates="customer", cascade="all, delete-orphan"
+    )
     orders: Mapped[list["Order"]] = relationship(back_populates="customer")
-    payment_methods: Mapped[list["PaymentMethod"]] = relationship(back_populates="customer", cascade="all, delete-orphan")
+    payment_methods: Mapped[list["PaymentMethod"]] = relationship(
+        back_populates="customer", cascade="all, delete-orphan"
+    )
     reviews: Mapped[list["Review"]] = relationship(back_populates="customer")
     carts: Mapped[list["Cart"]] = relationship(back_populates="customer")
 
@@ -111,8 +123,12 @@ class Address(BaseModel, VersionMixin):
     postal_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
     country_code: Mapped[str] = mapped_column(String(2), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    is_default: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("FALSE"))
-    address_metadata: Mapped[dict] = mapped_column(JSONB, default={}, server_default=text("'{}'::jsonb"))
+    is_default: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("FALSE")
+    )
+    address_metadata: Mapped[dict] = mapped_column(
+        JSONB, default={}, server_default=text("'{}'::jsonb")
+    )
 
     # Relationships
     customer: Mapped["Customer"] = relationship(back_populates="addresses")
@@ -138,8 +154,12 @@ class CustomerConsent(BaseModel):
     )
     consent_type: Mapped[str] = mapped_column(String(100), nullable=False)
     granted: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    granted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    granted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     ip_address: Mapped[str | None] = mapped_column(INET, nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String, nullable=True)
 

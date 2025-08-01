@@ -74,7 +74,7 @@ class CartItem(Base, TimestampMixin, SoftDeleteMixin):
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=False),
         primary_key=True,
-        server_default=text("UUID_GENERATE_V7()"),
+        server_default=text("uuid_generate_v7()"),
         nullable=False,
     )
     cart_id: Mapped[UUID] = mapped_column(

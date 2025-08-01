@@ -1,7 +1,7 @@
 """Database functions and triggers managed by alembic_utils."""
 
-from alembic_utils.pg_function import PGFunction
-from alembic_utils.pg_trigger import PGTrigger
+from alembic_utils.pg_function import PGFunction  # type: ignore[import-not-found]
+from alembic_utils.pg_trigger import PGTrigger  # type: ignore[import-not-found]
 
 # UUID v7 generation function
 uuid_generate_v7 = PGFunction(
@@ -112,6 +112,7 @@ DATABASE_FUNCTIONS = [
     uuid_generate_v7_precise,
     audit_trigger_function,
 ]
+
 
 # Function to create audit triggers for a table
 def create_audit_trigger(table_name: str, schema: str = "ecommerce") -> PGTrigger:
