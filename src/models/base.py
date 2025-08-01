@@ -1,6 +1,7 @@
 """Base model configuration for SQLAlchemy."""
 
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Integer, text
@@ -137,6 +138,7 @@ def create_async_engine(database_url: str | None = None) -> AsyncEngine:
     )
 
 
+@asynccontextmanager
 async def get_async_session() -> AsyncGenerator[AsyncSession]:
     """Get async database session.
 
@@ -153,3 +155,5 @@ async def get_async_session() -> AsyncGenerator[AsyncSession]:
 
     async with async_session_maker() as session:
         yield session
+
+    await engine.dispose()

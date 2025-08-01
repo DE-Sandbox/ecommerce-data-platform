@@ -83,6 +83,20 @@ docs/              # Documentation
 4. **Before commit**: `just lint && just test`
 5. **Documentation**: Update immediately with code changes
 
+### Git Push Rules
+
+**NEVER push to main/prod if tests fail!**
+- All tests must pass before pushing
+- All pre-commit hooks must pass
+- All pre-push hooks must pass
+- No `--no-verify` flag allowed when tests are failing
+
+**When hooks fail:**
+1. Show the full error output to the user
+2. List what failed (tests, linting, security checks)
+3. Fix all issues before attempting to push again
+4. Never suggest bypassing checks with `--no-verify`
+
 ### Code Review Process
 
 **ALWAYS after writing code:**

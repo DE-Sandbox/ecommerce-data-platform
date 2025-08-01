@@ -19,9 +19,12 @@ class TestBasicModelOperations:
     @pytest.mark.asyncio
     async def test_create_customer_with_pii(self, async_session) -> None:
         """Test creating a customer with PII data."""
-        # Create customer
+        import uuid
+
+        # Create customer with unique email
+        unique_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
         customer = Customer(
-            email="test@example.com",
+            email=unique_email,
             status="active",
             customer_type="individual",
         )
@@ -44,7 +47,7 @@ class TestBasicModelOperations:
 
         # Query back
         result = await async_session.execute(
-            select(Customer).where(Customer.email == "test@example.com")
+            select(Customer).where(Customer.email == unique_email)
         )
         found = result.scalar_one()
         assert found.id == customer.id
@@ -52,20 +55,23 @@ class TestBasicModelOperations:
     @pytest.mark.asyncio
     async def test_create_product_with_price(self, async_session) -> None:
         """Test creating a product with pricing."""
-        # Create category first
+        import uuid
+
+        # Create category first with unique name
+        unique_suffix = uuid.uuid4().hex[:8]
         category = Category(
-            name="Test Category",
-            slug="test-category",
+            name=f"Test Category {unique_suffix}",
+            slug=f"test-category-{unique_suffix}",
             display_order=1,
         )
         async_session.add(category)
         await async_session.commit()
 
-        # Create product
+        # Create product with unique SKU
         product = Product(
-            sku="TEST-001",
-            name="Test Product",
-            slug="test-product",
+            sku=f"TEST-{unique_suffix}",
+            name=f"Test Product {unique_suffix}",
+            slug=f"test-product-{unique_suffix}",
             category_id=category.id,
             status="active",
         )
@@ -89,9 +95,12 @@ class TestBasicModelOperations:
     @pytest.mark.asyncio
     async def test_uuid_v7_generation(self, async_session) -> None:
         """Test that UUID v7 is properly generated."""
-        # Create two customers
-        customer1 = Customer(email="uuid1@example.com")
-        customer2 = Customer(email="uuid2@example.com")
+        import uuid
+
+        # Create two customers with unique emails
+        unique_suffix = uuid.uuid4().hex[:8]
+        customer1 = Customer(email=f"uuid1_{unique_suffix}@example.com")
+        customer2 = Customer(email=f"uuid2_{unique_suffix}@example.com")
 
         async_session.add(customer1)
         async_session.add(customer2)
@@ -107,10 +116,12 @@ class TestBasicModelOperations:
     @pytest.mark.asyncio
     async def test_soft_delete(self, async_session) -> None:
         """Test soft delete functionality."""
+        import uuid
         from datetime import UTC, datetime
 
-        # Create customer
-        customer = Customer(email="delete@example.com")
+        # Create customer with unique email
+        unique_email = f"delete_{uuid.uuid4().hex[:8]}@example.com"
+        customer = Customer(email=unique_email)
         async_session.add(customer)
         await async_session.commit()
 
