@@ -9,7 +9,7 @@ default:
 # Development environment setup
 setup:
     @echo "🚀 Setting up development environment..."
-    export PATH="$HOME/.local/bin:$PATH" && uv sync --dev
+    uv sync --dev
     mise install
     ./scripts/git-hooks/install-hooks.sh
     @echo "✅ Development environment ready!"
@@ -36,31 +36,31 @@ init-aws:
 # Code quality checks (ultra-fast with Ruff)
 lint:
     @echo "🔍 Running linters..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run ruff check src/ tests/
-    export PATH="$HOME/.local/bin:$PATH" && uv run ruff format --check src/ tests/
-    export PATH="$HOME/.local/bin:$PATH" && uv run mypy src/
+    uv run ruff check src/ tests/
+    uv run ruff format --check src/ tests/
+    uv run mypy src/
 
 # Format code
 fmt:
     @echo "✨ Formatting code..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run ruff check --fix src/ tests/
-    export PATH="$HOME/.local/bin:$PATH" && uv run ruff format src/ tests/
+    uv run ruff check --fix src/ tests/
+    uv run ruff format src/ tests/
 
 # Run tests (defaults to all tests, or specify path/filter)
 test *args="tests/":
     @echo "🧪 Running tests..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run pytest {{args}} -v
+    uv run pytest {{args}} -v
 
 # Run tests with coverage
 test-cov:
     @echo "📊 Running tests with coverage..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run pytest tests/ --cov=src --cov-report=html --cov-report=term
+    uv run pytest tests/ --cov=src --cov-report=html --cov-report=term
 
 # Security scan
 security:
     @echo "🔐 Running security checks..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run bandit -r src/
-    export PATH="$HOME/.local/bin:$PATH" && uv run pip-audit
+    uv run bandit -r src/
+    uv run pip-audit
     @echo "✅ Security scan complete"
 
 # Docker security scan
@@ -80,7 +80,7 @@ clean:
     docker-compose down -v
     rm -rf .cache/ .coverage htmlcov/ .pytest_cache/ .mypy_cache/ .ruff_cache/
     find . -type d -name __pycache__ -exec rm -rf {} +
-    export PATH="$HOME/.local/bin:$PATH" && uv cache clean
+    uv cache clean
     @echo "✨ Clean!"
 
 # Deep clean (including database volumes)
@@ -108,47 +108,47 @@ deploy profile="personal":
 # Local development with hot reload
 dev:
     @echo "🔥 Starting development server..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+    uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 # Database migrations
 migrate:
     @echo "🗄️  Running database migrations..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade head
+    uv run alembic upgrade head
 
 # Create a new migration
 migrate-new name:
     @echo "📝 Creating new migration: {{name}}..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic revision --autogenerate -m "{{name}}"
+    uv run alembic revision --autogenerate -m "{{name}}"
     @echo "✅ Migration created!"
 
 # Show current migration status
 migrate-status:
     @echo "📊 Migration Status"
     @echo "=================="
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic current
+    uv run alembic current
     @echo ""
     @echo "Migration History:"
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic history --verbose
+    uv run alembic history --verbose
 
 # Downgrade to previous migration
 migrate-down:
     @echo "⬇️  Downgrading to previous migration..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic downgrade -1
+    uv run alembic downgrade -1
 
 # Downgrade to specific revision
 migrate-to revision:
     @echo "🎯 Migrating to revision: {{revision}}..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade {{revision}}
+    uv run alembic upgrade {{revision}}
 
 # Show migration SQL without applying
 migrate-sql:
     @echo "📄 Showing migration SQL..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic upgrade head --sql
+    uv run alembic upgrade head --sql
 
 # Verify migrations are in sync with models
 migrate-check:
     @echo "🔍 Checking if migrations are up to date..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run alembic check
+    uv run alembic check
 
 # Database maintenance commands
 db-up:
@@ -239,7 +239,7 @@ db-run file:
 # Generate synthetic data
 generate-data:
     @echo "🎲 Generating synthetic data..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run python scripts/generate_data.py
+    uv run python scripts/generate_data.py
 
 # View logs
 logs service="":
@@ -269,13 +269,13 @@ health:
 # Update dependencies
 update:
     @echo "📦 Updating dependencies..."
-    export PATH="$HOME/.local/bin:$PATH" && uv lock --upgrade
-    export PATH="$HOME/.local/bin:$PATH" && uv sync --dev
+    uv lock --upgrade
+    uv sync --dev
     @echo "✅ Dependencies updated!"
 
 # Run pre-commit hooks
 pre-commit:
-    export PATH="$HOME/.local/bin:$PATH" && uv run pre-commit run --all-files
+    uv run pre-commit run --all-files
 
 # Git operations for trunk-based development
 new branch:
