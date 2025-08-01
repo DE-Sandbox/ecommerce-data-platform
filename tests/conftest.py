@@ -52,7 +52,7 @@ def ensure_database_ready() -> Generator[None]:
         return
 
     # Start postgres if needed
-    subprocess.run(["docker-compose", "up", "-d", "postgres"], check=True)  # noqa: S607
+    subprocess.run(["docker-compose", "up", "-d", "postgres"], check=True)
 
     # Wait for health
     max_wait = 60
@@ -60,7 +60,7 @@ def ensure_database_ready() -> Generator[None]:
 
     while time.time() - start_time < max_wait:
         result = subprocess.run(
-            ["docker-compose", "ps", "postgres"],  # noqa: S607
+            ["docker-compose", "ps", "postgres"],
             check=False,
             capture_output=True,
             text=True,

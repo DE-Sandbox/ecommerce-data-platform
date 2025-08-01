@@ -135,6 +135,7 @@ ignore = [
     "PLC0415",  # Allow imports inside functions for test isolation
     "DTZ001",   # Allow datetime without timezone in tests
     "S607",     # Allow subprocess with partial paths (for 'just' commands)
+    "S603",     # Allow subprocess calls in tests (we control the input)
 ]
 "scripts/*" = ["T201"]  # Allow print in scripts
 
