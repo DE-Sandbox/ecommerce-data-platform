@@ -87,6 +87,21 @@ Address critical gaps identified by functional testing review:
 - [ ] Add API client test helpers
 - [ ] Configure test data isolation
 
+### 5. Items Moved from Day 2 (1.5 hours) 🆕
+- [ ] Complete observability stack setup
+  - [ ] Add Prometheus + Grafana to docker-compose
+  - [ ] Configure PostgreSQL exporter
+  - [ ] Create auto-provisioned dashboards
+  - [ ] Integrate with FastAPI metrics
+- [ ] Data quality metrics collection
+  - [ ] Track validation failures
+  - [ ] Monitor data completeness
+  - [ ] Create quality dashboards
+- [ ] Event schema documentation
+  - [ ] Document schema evolution approach
+  - [ ] Create event flow diagrams
+  - [ ] Build event catalog
+
 ---
 
 ## Deliverables Checklist
@@ -233,11 +248,12 @@ async def transactional_db():
 ---
 
 ## Next Steps Preview (Day 4)
-- FastAPI application implementation
-- Synthetic data generation API
-- API documentation with OpenAPI
+- CDC Pipeline with Debezium and Redpanda
+- Configure PostgreSQL logical replication
+- Set up Redpanda Console monitoring
+- Create event streaming topics
+- Implement CDC health checks
 - Performance testing setup
-- Monitoring and observability
 
 ## References
 - Test coverage gaps documented in: docs/test-coverage-gaps.md

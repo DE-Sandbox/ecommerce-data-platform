@@ -14,7 +14,7 @@ dependencies = [
     "deltalake>=0.20.0",
     "pandas>=2.2.0",
     "boto3>=1.35.0",
-    "pydantic>=2.10.0",
+    "pydantic[email]>=2.10.0",
     "fastapi>=0.115.0",
     "uvicorn>=0.32.0",
     "sqlalchemy>=2.0.0",
@@ -96,6 +96,8 @@ module = [
     "asyncpg.*",
     "alembic.*",
     "alembic_utils.*",
+    "pydantic.*",
+    "email_validator.*",
 ]
 ignore_missing_imports = true
 
@@ -139,6 +141,7 @@ ignore = [
     "S603",     # Allow subprocess calls in tests (we control the input)
 ]
 "scripts/*" = ["T201"]  # Allow print in scripts
+"src/events/registry.py" = ["PLC0415"]  # Allow lazy imports to avoid circular dependencies
 
 [tool.ruff.format]
 quote-style = "double"

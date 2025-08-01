@@ -31,20 +31,13 @@
 - [x] Create documentation for migration workflow
 - [x] Create minimal reference data migration (currencies, statuses only)
 
-### 3. Data Quality Framework (1 hour) ⏸️ **DEFER TO DAY 3**
+### 3. Data Quality Framework (1 hour) ⏸️ **PARTIALLY DEFER TO DAY 3**
 - [ ] ~~Integrate Great Expectations~~ (complexity not needed yet)
 - [x] Define data quality rules (via DB constraints)
-- [ ] Create Pydantic validation models
-- [ ] Add API request validation
-- [ ] Set up data quality metrics
-
-### 4. Event Schema Registry (30 mins)
-- [ ] Design event taxonomy
-- [ ] Create schema versioning strategy
-- [ ] Define core business events
-- [ ] Plan schema evolution approach
-- [ ] Document event flows
-
+- [ ] Create Pydantic validation models 🎯 **TODAY with FastAPI**
+- [ ] Add API request validation 🎯 **TODAY with FastAPI**
+- [ ] ~~Set up data quality metrics~~ → **MOVED TO DAY 3**
+w
 ---
 
 ## Day 2 Afternoon Session: APIs, Synthetic Data & Monitoring
@@ -82,25 +75,24 @@ Implement layered data strategy:
 - [ ] Add progress tracking for large datasets
 - [ ] Create CLI commands in justfile
 
-### 3. Observability Setup (1 hour) 🚀 **QUICK WIN**
-- [ ] Add Prometheus + Grafana to docker-compose
-- [ ] Configure PostgreSQL exporter
-- [ ] Add FastAPI metrics middleware:
-  - [ ] Request duration histogram
-  - [ ] Error rate counter
-  - [ ] Active connections gauge
-- [ ] Create auto-provisioned dashboards
-- [ ] Set up structlog for JSON logging
-- [ ] Add correlation IDs to requests
+### 3. Observability Setup (1 hour) ⏸️ **DEFER TO DAY 3**
+- [ ] ~~Add Prometheus + Grafana to docker-compose~~ → **MOVED TO DAY 3**
+- [ ] ~~Configure PostgreSQL exporter~~ → **MOVED TO DAY 3**
+- [ ] Add basic FastAPI metrics middleware 🎯 **TODAY**
+  - [ ] Request count and duration
+  - [ ] Basic error tracking
+- [ ] ~~Create auto-provisioned dashboards~~ → **MOVED TO DAY 3**
+- [ ] Set up structlog for JSON logging 🎯 **TODAY**
+- [ ] Add correlation IDs to requests 🎯 **TODAY**
 
-### 4. CDC Pipeline Foundation (1 hour) 🔄 **CORE CAPABILITY**
-- [ ] Add Redpanda (not Kafka) to docker-compose
-- [ ] Configure PostgreSQL for logical replication
-- [ ] Set up Debezium PostgreSQL connector
-- [ ] Create topics for each table
-- [ ] Add Redpanda Console for monitoring
-- [ ] Test with sample transactions
-- [ ] Add CDC health checks to monitoring
+### 4. CDC Pipeline Foundation (1 hour) ⏸️ **DEFER TO DAY 4**
+- [x] Add Redpanda to docker-compose (already done)
+- [ ] ~~Configure PostgreSQL for logical replication~~ → **MOVED TO DAY 4**
+- [ ] ~~Set up Debezium PostgreSQL connector~~ → **MOVED TO DAY 4**
+- [ ] ~~Create topics for each table~~ → **MOVED TO DAY 4**
+- [ ] ~~Add Redpanda Console for monitoring~~ → **MOVED TO DAY 4**
+- [ ] ~~Test with sample transactions~~ → **MOVED TO DAY 4**
+- [ ] ~~Add CDC health checks to monitoring~~ → **MOVED TO DAY 4**
 
 ---
 
@@ -188,6 +180,36 @@ Implement layered data strategy:
 - Morning Session: 75% complete (missing seed data, event registry)
 - Afternoon Session: 10% complete (only docker-compose updates)
 - Overall Day 2: ~40% complete
+
+## 🏗️ Architect's Execution Plan for Remaining Day 2 Tasks
+
+### Today's Focused Scope (4-5 hours)
+1. **Event Schema Registry** (30 mins)
+   - Design event taxonomy for order, customer, payment, inventory
+   - Create JSON schema versioning strategy (v1.0 format)
+   - Define core business events only
+
+2. **FastAPI Core Setup** (2 hours)
+   - Create project structure with proper layering
+   - Implement async database sessions
+   - Generate Pydantic models from SQLAlchemy
+   - Add health/readiness endpoints
+
+3. **Synthetic Data Framework** (2 hours)
+   - Implement Factory Boy base classes
+   - Create model-specific factories
+   - Build REST API endpoints for data generation
+   - Add basic scenario generators
+
+4. **Basic Observability** (30 mins)
+   - Add structlog for JSON logging
+   - Implement correlation IDs
+   - Basic request metrics (no Prometheus yet)
+
+### Deferred to Future Days
+- **Day 3**: Full observability stack, data quality metrics, event documentation
+- **Day 4**: CDC pipeline with Debezium, Redpanda configuration
+- **Day 5**: Performance testing, advanced scenarios
 
 ## Additional Work Completed Today
 
