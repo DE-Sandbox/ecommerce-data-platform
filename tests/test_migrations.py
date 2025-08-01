@@ -128,9 +128,9 @@ class TestMigrationCommands:
             timeout=30,
         )
 
-        assert (
-            downgrade_result.returncode == 0
-        ), f"Downgrade failed: {downgrade_result.stderr}"
+        assert downgrade_result.returncode == 0, (
+            f"Downgrade failed: {downgrade_result.stderr}"
+        )
 
         # Test upgrade back to head
         upgrade_result = subprocess.run(
@@ -141,9 +141,9 @@ class TestMigrationCommands:
             timeout=30,
         )
 
-        assert (
-            upgrade_result.returncode == 0
-        ), f"Upgrade failed: {upgrade_result.stderr}"
+        assert upgrade_result.returncode == 0, (
+            f"Upgrade failed: {upgrade_result.stderr}"
+        )
 
         # Verify we're back at the same revision
         final_result = subprocess.run(
@@ -155,6 +155,6 @@ class TestMigrationCommands:
         )
 
         if current_revision:
-            assert (
-                current_revision in final_result.stdout
-            ), "Not at expected revision after up/down cycle"
+            assert current_revision in final_result.stdout, (
+                "Not at expected revision after up/down cycle"
+            )
