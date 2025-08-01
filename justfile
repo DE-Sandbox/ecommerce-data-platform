@@ -46,10 +46,10 @@ fmt:
     export PATH="$HOME/.local/bin:$PATH" && uv run ruff check --fix src/ tests/
     export PATH="$HOME/.local/bin:$PATH" && uv run ruff format src/ tests/
 
-# Run tests
-test:
+# Run tests (defaults to all tests, or specify path/filter)
+test *args="tests/":
     @echo "🧪 Running tests..."
-    export PATH="$HOME/.local/bin:$PATH" && uv run pytest tests/ -v
+    export PATH="$HOME/.local/bin:$PATH" && uv run pytest {{args}} -v
 
 # Run tests with coverage
 test-cov:
