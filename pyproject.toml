@@ -92,6 +92,9 @@ module = [
     "delta.*",
     "dagster.*",
     "dbt.*",
+    "sqlalchemy.*",
+    "asyncpg.*",
+    "alembic.*",
 ]
 ignore_missing_imports = true
 
@@ -123,7 +126,16 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "PLR2004", "SLF001"]  # Allow assert, magic values, private access in tests
+"tests/*" = [
+    "S101",     # Allow assert in tests
+    "PLR2004",  # Allow magic values in tests
+    "SLF001",   # Allow private access in tests
+    "ANN001",   # Allow missing type annotations for test fixtures
+    "ANN201",   # Allow missing return type annotations for test fixtures
+    "PLC0415",  # Allow imports inside functions for test isolation
+    "DTZ001",   # Allow datetime without timezone in tests
+    "S607",     # Allow subprocess with partial paths (for 'just' commands)
+]
 "scripts/*" = ["T201"]  # Allow print in scripts
 
 [tool.ruff.format]

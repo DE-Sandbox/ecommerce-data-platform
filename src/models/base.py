@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
+)
+from sqlalchemy.ext.asyncio import (
     create_async_engine as async_engine_from_config,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -114,16 +116,17 @@ class BaseModelNoSoftDelete(Base, TimestampMixin):
 
 def create_async_engine(database_url: str | None = None) -> AsyncEngine:
     """Create async database engine.
-    
+
     Args:
         database_url: Optional database URL. If not provided, uses config.
-        
+
     Returns:
         AsyncEngine: Configured async SQLAlchemy engine
+
     """
     if database_url is None:
         database_url = get_database_url(async_driver=True)
-    
+
     return async_engine_from_config(
         database_url,
         echo=False,  # Set to False in production
@@ -134,9 +137,9 @@ def create_async_engine(database_url: str | None = None) -> AsyncEngine:
     )
 
 
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_async_session() -> AsyncGenerator[AsyncSession]:
     """Get async database session.
-    
+
     Usage:
         async with get_async_session() as session:
             # Use session
@@ -147,6 +150,6 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    
+
     async with async_session_maker() as session:
         yield session

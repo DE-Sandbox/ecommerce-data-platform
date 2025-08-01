@@ -79,8 +79,28 @@ docs/              # Documentation
 
 1. **Before coding**: Read existing code patterns
 2. **TDD cycle**: Test → Code → Refactor
-3. **Before commit**: `just lint && just test`
-4. **Documentation**: Update immediately with code changes
+3. **Code review**: Use data-swe-code-reviewer agent, ALWAYS show summary
+4. **Before commit**: `just lint && just test`
+5. **Documentation**: Update immediately with code changes
+
+### Code Review Process
+
+**ALWAYS after writing code:**
+1. Run data-swe-code-reviewer agent
+2. Display summary to user:
+   ```
+   Code Review Summary:
+   
+   CRITICAL (must fix):
+   - [Issue and fix]
+   
+   WARNINGS (should fix):
+   - [Issue and suggestion]
+   
+   SUGGESTIONS (nice to have):
+   - [Minor improvements]
+   ```
+3. Wait for user approval before fixing critical issues
 
 ## Common Tasks
 
