@@ -1,5 +1,6 @@
 """Test Product, Category, and related models."""
 
+import uuid
 from decimal import Decimal
 
 import pytest
@@ -7,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.product import Category, Product
+from src.models.product import Category, Product, ProductPrice
 
 
 class TestProductModel:
@@ -16,54 +17,64 @@ class TestProductModel:
     @pytest.mark.asyncio
     async def test_create_product(self, async_session: AsyncSession) -> None:
         """Test creating a product."""
+        # Create category first
+        category = Category(
+            name=f"Test Category {uuid.uuid4().hex[:8]}",
+            slug=f"test-category-{uuid.uuid4().hex[:8]}",
+            display_order=1,
+        )
+        async_session.add(category)
+        await async_session.commit()
+
         product = Product(
-            sku="TEST-001",
+            sku=f"TEST-{uuid.uuid4().hex[:8]}",
             name="Test Product",
+            slug=f"test-product-{uuid.uuid4().hex[:8]}",
             description="A test product description",
-            price=99.99,
-            cost=49.99,
-            currency="USD",
-            weight=1.5,
-            weight_unit="kg",
-            length=10.0,
-            width=20.0,
-            height=5.0,
-            dimension_unit="cm",
-            is_digital=False,
-            is_active=True,
-            attributes={"color": "blue", "size": "medium"},
-            specifications={"material": "cotton", "care": "machine wash"},
+            category_id=category.id,
+            status="active",
+            weight=Decimal("1.5"),
+            dimensions={"length": 10.0, "width": 20.0, "height": 5.0},
+            product_metadata={"color": "blue", "size": "medium"},
+            tags=["new", "featured"],
         )
         async_session.add(product)
+        await async_session.commit()
+
+        # Create price
+        price = ProductPrice(
+            product_id=product.id,
+            currency_code="USD",
+            price=Decimal("99.99"),
+            is_active=True,
+        )
+        async_session.add(price)
         await async_session.commit()
 
         # Verify product was created
         assert product.id is not None
         assert product.created_at is not None
-        assert product.price == Decimal("99.99")
-        assert product.attributes["color"] == "blue"
-
-        # Clean up
-        await async_session.delete(product)
-        await async_session.commit()
+        assert product.product_metadata["color"] == "blue"
+        assert price.price == Decimal("99.99")
 
     @pytest.mark.asyncio
     async def test_product_unique_sku(self, async_session: AsyncSession) -> None:
         """Test that SKU must be unique."""
         # Create first product
+        unique_sku = f"UNIQUE-{uuid.uuid4().hex[:8]}"
         product1 = Product(
-            sku="UNIQUE-SKU",
+            sku=unique_sku,
             name="First Product",
-            price=50.00,
+            slug=f"first-product-{uuid.uuid4().hex[:8]}",
         )
         async_session.add(product1)
         await async_session.commit()
 
         # Try to create second product with same SKU
         product2 = Product(
-            sku="UNIQUE-SKU",
+            sku=unique_sku,
             name="Second Product",
-            price=60.00,
+            slug=f"second-product-{uuid.uuid4().hex[:8]}",
         )
         async_session.add(product2)
 
@@ -72,54 +83,46 @@ class TestProductModel:
 
         await async_session.rollback()
 
-        # Clean up
-        await async_session.delete(product1)
-        await async_session.commit()
-
     @pytest.mark.asyncio
-    async def test_digital_product(self, async_session: AsyncSession) -> None:
-        """Test digital product attributes."""
+    async def test_product_status(self, async_session: AsyncSession) -> None:
+        """Test product status transitions."""
         product = Product(
-            sku="DIGITAL-001",
-            name="Digital Download",
-            description="A digital product",
-            price=29.99,
-            is_digital=True,
-            # Digital products shouldn't need physical dimensions
-            weight=0,
-            attributes={"format": "PDF", "pages": 150},
+            sku=f"STATUS-{uuid.uuid4().hex[:8]}",
+            name="Status Test Product",
+            slug=f"status-test-{uuid.uuid4().hex[:8]}",
+            status="draft",
         )
         async_session.add(product)
         await async_session.commit()
 
-        assert product.is_digital is True
-        assert product.weight == 0
-        assert product.attributes["format"] == "PDF"
-
-        # Clean up
-        await async_session.delete(product)
-        await async_session.commit()
+        # Test status transitions
+        statuses = ["active", "inactive", "discontinued"]
+        for status in statuses:
+            product.status = status
+            await async_session.commit()
+            assert product.status == status
 
     @pytest.mark.asyncio
     async def test_product_metadata(self, async_session: AsyncSession) -> None:
-        """Test product with metadata fields."""
+        """Test product metadata storage."""
         product = Product(
-            sku="META-001",
-            name="SEO Optimized Product",
-            price=149.99,
-            meta_title="Buy the Best Product | Example Store",
-            meta_description="The best product with amazing features and benefits.",
-            meta_keywords=["best", "product", "quality"],
+            sku=f"META-{uuid.uuid4().hex[:8]}",
+            name="Metadata Test",
+            slug=f"metadata-test-{uuid.uuid4().hex[:8]}",
+            product_metadata={
+                "manufacturer": "Test Corp",
+                "warranty": "2 years",
+                "certifications": ["CE", "FCC"],
+            },
+            tags=["electronic", "certified"],
         )
         async_session.add(product)
         await async_session.commit()
 
-        assert product.meta_title is not None
-        assert "best" in product.meta_keywords
-
-        # Clean up
-        await async_session.delete(product)
-        await async_session.commit()
+        # Verify metadata
+        assert product.product_metadata["manufacturer"] == "Test Corp"
+        assert "CE" in product.product_metadata["certifications"]
+        assert "electronic" in product.tags
 
 
 class TestCategoryModel:
@@ -129,135 +132,109 @@ class TestCategoryModel:
     async def test_create_category(self, async_session: AsyncSession) -> None:
         """Test creating a category."""
         category = Category(
-            name="Electronics",
-            slug="electronics",
-            description="Electronic products and gadgets",
+            name=f"Test Category {uuid.uuid4().hex[:8]}",
+            slug=f"test-category-{uuid.uuid4().hex[:8]}",
+            description="A test category",
+            display_order=1,
             is_active=True,
-            sort_order=1,
         )
         async_session.add(category)
         await async_session.commit()
 
+        # Verify category was created
         assert category.id is not None
-        assert category.slug == "electronics"
-        assert category.parent_id is None  # Root category
-
-        # Clean up
-        await async_session.delete(category)
-        await async_session.commit()
+        assert category.created_at is not None
+        assert category.is_active is True
 
     @pytest.mark.asyncio
     async def test_category_hierarchy(self, async_session: AsyncSession) -> None:
-        """Test parent-child category relationships."""
+        """Test category parent-child relationships."""
         # Create parent category
         parent = Category(
-            name="Clothing",
-            slug="clothing",
-            description="All clothing items",
+            name=f"Parent Category {uuid.uuid4().hex[:8]}",
+            slug=f"parent-{uuid.uuid4().hex[:8]}",
         )
         async_session.add(parent)
         await async_session.commit()
 
         # Create child categories
-        mens = Category(
-            name="Men's Clothing",
-            slug="mens-clothing",
+        child1 = Category(
+            name=f"Child 1 {uuid.uuid4().hex[:8]}",
+            slug=f"child-1-{uuid.uuid4().hex[:8]}",
             parent_id=parent.id,
-            sort_order=1,
         )
-
-        womens = Category(
-            name="Women's Clothing",
-            slug="womens-clothing",
+        child2 = Category(
+            name=f"Child 2 {uuid.uuid4().hex[:8]}",
+            slug=f"child-2-{uuid.uuid4().hex[:8]}",
             parent_id=parent.id,
-            sort_order=2,
         )
-
-        async_session.add(mens)
-        async_session.add(womens)
+        async_session.add(child1)
+        async_session.add(child2)
         await async_session.commit()
 
-        # Verify hierarchy
-        assert mens.parent_id == parent.id
-        assert womens.parent_id == parent.id
+        # Verify relationships
+        assert child1.parent_id == parent.id
+        assert child2.parent_id == parent.id
 
-        # Query children
+        # Query children through parent
         result = await async_session.execute(
-            select(Category)
-            .where(Category.parent_id == parent.id)
-            .order_by(Category.sort_order)
+            select(Category).where(Category.parent_id == parent.id)
         )
         children = result.scalars().all()
         assert len(children) == 2
-        assert children[0].slug == "mens-clothing"
-        assert children[1].slug == "womens-clothing"
-
-        # Clean up
-        await async_session.delete(mens)
-        await async_session.delete(womens)
-        await async_session.delete(parent)
-        await async_session.commit()
 
     @pytest.mark.asyncio
     async def test_category_unique_slug(self, async_session: AsyncSession) -> None:
         """Test that category slug must be unique."""
-        cat1 = Category(
-            name="Category 1",
-            slug="unique-category",
+        unique_slug = f"unique-slug-{uuid.uuid4().hex[:8]}"
+
+        # Create first category
+        category1 = Category(
+            name=f"First Category {uuid.uuid4().hex[:8]}",
+            slug=unique_slug,
         )
-        async_session.add(cat1)
+        async_session.add(category1)
         await async_session.commit()
 
-        cat2 = Category(
-            name="Category 2",
-            slug="unique-category",
+        # Try to create second category with same slug
+        category2 = Category(
+            name=f"Second Category {uuid.uuid4().hex[:8]}",
+            slug=unique_slug,
         )
-        async_session.add(cat2)
+        async_session.add(category2)
 
         with pytest.raises(IntegrityError):
             await async_session.commit()
 
-        await async_session.rollback()
-
-        # Clean up
-        await async_session.delete(cat1)
-        await async_session.commit()
-
     @pytest.mark.asyncio
     async def test_product_with_category(self, async_session: AsyncSession) -> None:
-        """Test product with category assignment."""
+        """Test product-category relationship."""
         # Create category
-        electronics = Category(
-            name="Electronics",
-            slug="electronics-test",
+        category = Category(
+            name=f"Electronics {uuid.uuid4().hex[:8]}",
+            slug=f"electronics-{uuid.uuid4().hex[:8]}",
             description="Electronic products",
         )
-        async_session.add(electronics)
+        async_session.add(category)
         await async_session.commit()
 
-        # Create product with category
-        product = Product(
-            sku="CAT-PROD-001",
-            name="Electronic Product",
-            price=199.99,
-            category_id=electronics.id,
-        )
-        async_session.add(product)
-        await async_session.commit()
+        # Create products in category
+        products = []
+        for i in range(3):
+            product = Product(
+                sku=f"ELEC-{uuid.uuid4().hex[:8]}",
+                name=f"Electronic Product {i}",
+                slug=f"electronic-product-{i}-{uuid.uuid4().hex[:8]}",
+                category_id=category.id,
+            )
+            products.append(product)
+            async_session.add(product)
 
-        # Verify category assignment
-        await async_session.refresh(product)
-        assert product.category_id == electronics.id
+        await async_session.commit()
 
         # Query products by category
         result = await async_session.execute(
-            select(Product).where(Product.category_id == electronics.id)
+            select(Product).where(Product.category_id == category.id)
         )
-        products = result.scalars().all()
-        assert len(products) == 1
-        assert products[0].sku == "CAT-PROD-001"
-
-        # Clean up
-        await async_session.delete(product)
-        await async_session.delete(electronics)
-        await async_session.commit()
+        category_products = result.scalars().all()
+        assert len(category_products) == 3

@@ -1,5 +1,6 @@
 """Test Customer and Address models."""
 
+import uuid
 from datetime import UTC, datetime
 
 import pytest
@@ -7,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.customer import Address, Customer
+from src.models.customer import Address, Customer, CustomerPII
 
 
 class TestCustomerModel:
@@ -16,47 +17,52 @@ class TestCustomerModel:
     @pytest.mark.asyncio
     async def test_create_customer(self, async_session: AsyncSession) -> None:
         """Test creating a customer."""
+        # Create customer
         customer = Customer(
-            email="john.doe@example.com",
+            email=f"john.doe_{uuid.uuid4().hex[:8]}@example.com",
+            status="active",
+            customer_type="individual",
+        )
+        async_session.add(customer)
+        await async_session.commit()
+
+        # Create PII data
+        pii = CustomerPII(
+            customer_id=customer.id,
             first_name="John",
             last_name="Doe",
             phone="+1234567890",
             date_of_birth=datetime(1990, 1, 1).date(),
-            customer_segment="premium",
-            lifetime_value=1500.00,
-            acquisition_channel="organic",
-            preferred_language="en",
         )
-        async_session.add(customer)
+        async_session.add(pii)
         await async_session.commit()
 
         # Verify customer was created
         assert customer.id is not None
         assert customer.created_at is not None
-        assert customer.is_active is True
+        assert customer.status == "active"
         assert customer.email_verified is False
-
-        # Clean up
-        await async_session.delete(customer)
-        await async_session.commit()
+        assert pii.first_name == "John"
+        assert pii.last_name == "Doe"
 
     @pytest.mark.asyncio
     async def test_customer_unique_email(self, async_session: AsyncSession) -> None:
         """Test that email must be unique."""
         # Create first customer
+        unique_email = f"unique_{uuid.uuid4().hex[:8]}@example.com"
         customer1 = Customer(
-            email="unique@example.com",
-            first_name="First",
-            last_name="User",
+            email=unique_email,
+            status="active",
+            customer_type="individual",
         )
         async_session.add(customer1)
         await async_session.commit()
 
         # Try to create second customer with same email
         customer2 = Customer(
-            email="unique@example.com",
-            first_name="Second",
-            last_name="User",
+            email=unique_email,
+            status="active",
+            customer_type="individual",
         )
         async_session.add(customer2)
 
@@ -73,9 +79,9 @@ class TestCustomerModel:
     async def test_customer_soft_delete(self, async_session: AsyncSession) -> None:
         """Test soft delete functionality."""
         customer = Customer(
-            email="delete@example.com",
-            first_name="Delete",
-            last_name="Me",
+            email=f"delete_{uuid.uuid4().hex[:8]}@example.com",
+            status="active",
+            customer_type="individual",
         )
         async_session.add(customer)
         await async_session.commit()
@@ -86,42 +92,39 @@ class TestCustomerModel:
 
         # Query should still find the customer
         result = await async_session.execute(
-            select(Customer).where(Customer.email == "delete@example.com")
+            select(Customer).where(Customer.id == customer.id)
         )
         found = result.scalar_one_or_none()
         assert found is not None
         assert found.deleted_at is not None
 
     @pytest.mark.asyncio
-    async def test_customer_segments(self, async_session: AsyncSession) -> None:
-        """Test different customer segments."""
-        segments = ["regular", "premium", "vip"]
+    async def test_customer_types(self, async_session: AsyncSession) -> None:
+        """Test different customer types."""
+        types = ["individual", "business"]
         customers = []
 
-        for _i, segment in enumerate(segments):
+        for customer_type in types:
             customer = Customer(
-                email=f"{segment}@example.com",
-                first_name=segment.capitalize(),
-                last_name="Customer",
-                customer_segment=segment,
+                email=f"{customer_type}_{uuid.uuid4().hex[:8]}@example.com",
+                status="active",
+                customer_type=customer_type,
             )
             customers.append(customer)
             async_session.add(customer)
 
         await async_session.commit()
 
-        # Query by segment
+        # Query by type - filter by current test's customers
         result = await async_session.execute(
-            select(Customer).where(Customer.customer_segment == "premium")
+            select(Customer).where(
+                (Customer.customer_type == "business")
+                & (Customer.id.in_([c.id for c in customers]))
+            )
         )
-        premium_customers = result.scalars().all()
-        assert len(premium_customers) == 1
-        assert premium_customers[0].email == "premium@example.com"
-
-        # Clean up
-        for customer in customers:
-            await async_session.delete(customer)
-        await async_session.commit()
+        business_customers = result.scalars().all()
+        assert len(business_customers) == 1
+        assert business_customers[0].email.startswith("business_")
 
 
 class TestAddressModel:
@@ -132,9 +135,9 @@ class TestAddressModel:
         """Test creating an address."""
         # First create a customer
         customer = Customer(
-            email="address@example.com",
-            first_name="Address",
-            last_name="Test",
+            email=f"address_{uuid.uuid4().hex[:8]}@example.com",
+            status="active",
+            customer_type="individual",
         )
         async_session.add(customer)
         await async_session.commit()
@@ -142,7 +145,7 @@ class TestAddressModel:
         # Create address
         address = Address(
             customer_id=customer.id,
-            address_type="shipping",
+            type="shipping",
             street_address_1="123 Main St",
             street_address_2="Apt 4B",
             city="New York",
@@ -169,9 +172,9 @@ class TestAddressModel:
         """Test different address types."""
         # Create customer
         customer = Customer(
-            email="multi-address@example.com",
-            first_name="Multi",
-            last_name="Address",
+            email=f"multi-address_{uuid.uuid4().hex[:8]}@example.com",
+            status="active",
+            customer_type="individual",
         )
         async_session.add(customer)
         await async_session.commit()
@@ -179,7 +182,7 @@ class TestAddressModel:
         # Create multiple addresses
         shipping = Address(
             customer_id=customer.id,
-            address_type="shipping",
+            type="shipping",
             street_address_1="123 Shipping St",
             city="Ship City",
             state_province="SC",
@@ -189,7 +192,7 @@ class TestAddressModel:
 
         billing = Address(
             customer_id=customer.id,
-            address_type="billing",
+            type="billing",
             street_address_1="456 Billing Ave",
             city="Bill City",
             state_province="BC",
@@ -204,8 +207,7 @@ class TestAddressModel:
         # Query addresses by type
         result = await async_session.execute(
             select(Address).where(
-                (Address.customer_id == customer.id)
-                & (Address.address_type == "shipping")
+                (Address.customer_id == customer.id) & (Address.type == "shipping")
             )
         )
         shipping_addresses = result.scalars().all()
@@ -222,30 +224,29 @@ class TestAddressModel:
     async def test_address_geolocation(self, async_session: AsyncSession) -> None:
         """Test address with geolocation data."""
         customer = Customer(
-            email="geo@example.com",
-            first_name="Geo",
-            last_name="Located",
+            email=f"geo_{uuid.uuid4().hex[:8]}@example.com",
+            status="active",
+            customer_type="individual",
         )
         async_session.add(customer)
         await async_session.commit()
 
         address = Address(
             customer_id=customer.id,
-            address_type="shipping",
+            type="shipping",
             street_address_1="1 Times Square",
             city="New York",
             state_province="NY",
             postal_code="10036",
             country_code="US",
-            latitude=40.7580,
-            longitude=-73.9855,
+            address_metadata={"latitude": 40.7580, "longitude": -73.9855},
         )
         async_session.add(address)
         await async_session.commit()
 
-        # Verify geolocation
-        assert address.latitude == 40.7580
-        assert address.longitude == -73.9855
+        # Verify geolocation in metadata
+        assert address.address_metadata["latitude"] == 40.7580
+        assert address.address_metadata["longitude"] == -73.9855
 
         # Clean up
         await async_session.delete(address)

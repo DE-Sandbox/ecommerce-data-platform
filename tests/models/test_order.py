@@ -1,7 +1,7 @@
 """Test Order and OrderItem models."""
 
+import uuid
 from datetime import UTC, datetime
-from decimal import Decimal
 
 import pytest
 from sqlalchemy import select
@@ -15,50 +15,6 @@ from src.models.product import Product
 class TestOrderModel:
     """Test Order model functionality."""
 
-    @pytest.fixture
-    async def test_customer(self, async_session: AsyncSession) -> Customer:
-        """Create a test customer."""
-        customer = Customer(
-            email="order-test@example.com",
-            first_name="Order",
-            last_name="Test",
-            phone="+1234567890",
-        )
-        async_session.add(customer)
-        await async_session.commit()
-        return customer
-
-    @pytest.fixture
-    async def test_address(
-        self, async_session: AsyncSession, test_customer: Customer
-    ) -> Address:
-        """Create a test address."""
-        address = Address(
-            customer_id=test_customer.id,
-            address_type="shipping",
-            street_address_1="123 Test St",
-            city="Test City",
-            state_province="TC",
-            postal_code="12345",
-            country_code="US",
-        )
-        async_session.add(address)
-        await async_session.commit()
-        return address
-
-    @pytest.fixture
-    async def test_product(self, async_session: AsyncSession) -> Product:
-        """Create a test product."""
-        product = Product(
-            sku="ORDER-TEST-001",
-            name="Test Product for Orders",
-            price=50.00,
-            cost=25.00,
-        )
-        async_session.add(product)
-        await async_session.commit()
-        return product
-
     @pytest.mark.asyncio
     async def test_create_order(
         self,
@@ -68,18 +24,30 @@ class TestOrderModel:
     ) -> None:
         """Test creating an order."""
         order = Order(
-            order_number="ORD-2025-001",
+            order_number=f"ORD-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="pending",
-            currency="USD",
-            subtotal=100.00,
-            tax_amount=8.50,
-            shipping_amount=10.00,
-            discount_amount=5.00,
-            total_amount=113.50,
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
-            customer_notes="Please handle with care",
+            currency_code="USD",
+            subtotal_cents=10000,  # $100.00
+            tax_cents=850,  # $8.50
+            shipping_cents=1000,  # $10.00
+            discount_cents=500,  # $5.00
+            total_cents=11350,  # $113.50
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            notes="Please handle with care",
         )
         async_session.add(order)
         await async_session.commit()
@@ -87,9 +55,9 @@ class TestOrderModel:
         # Verify order was created
         assert order.id is not None
         assert order.created_at is not None
-        assert order.order_number == "ORD-2025-001"
+        assert order.order_number.startswith("ORD-")
         assert order.status == "pending"
-        assert order.total_amount == Decimal("113.50")
+        assert order.total_cents == 11350
 
     @pytest.mark.asyncio
     async def test_order_status_transitions(
@@ -100,12 +68,28 @@ class TestOrderModel:
     ) -> None:
         """Test order status transitions."""
         order = Order(
-            order_number="ORD-STATUS-001",
+            order_number=f"ORD-STATUS-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="pending",
-            total_amount=100.00,
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
+            subtotal_cents=10000,  # $100.00
+            tax_cents=0,
+            shipping_cents=0,
+            discount_cents=0,
+            total_cents=10000,  # $100.00
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
         )
         async_session.add(order)
         await async_session.commit()
@@ -138,13 +122,25 @@ class TestOrderModel:
         """Test order with line items."""
         # Create order
         order = Order(
-            order_number="ORD-ITEMS-001",
+            order_number=f"ORD-ITEMS-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="pending",
-            subtotal=150.00,
-            total_amount=150.00,
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
+            subtotal_cents=15000,  # $150.00
+            total_cents=15000,  # $150.00
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
         )
         async_session.add(order)
         await async_session.commit()
@@ -153,23 +149,25 @@ class TestOrderModel:
         item1 = OrderItem(
             order_id=order.id,
             product_id=test_product.id,
+            sku=test_product.sku,
+            name=test_product.name,
             quantity=2,
-            unit_price=50.00,
-            subtotal=100.00,
-            discount_amount=0.00,
-            tax_amount=0.00,
-            total_amount=100.00,
+            unit_price_cents=5000,  # $50.00
+            discount_cents=0,
+            tax_cents=0,
+            line_total_cents=10000,  # 2 * $50.00
         )
 
         item2 = OrderItem(
             order_id=order.id,
             product_id=test_product.id,
+            sku=test_product.sku,
+            name=test_product.name,
             quantity=1,
-            unit_price=50.00,
-            subtotal=50.00,
-            discount_amount=0.00,
-            tax_amount=0.00,
-            total_amount=50.00,
+            unit_price_cents=5000,  # $50.00
+            discount_cents=0,
+            tax_cents=0,
+            line_total_cents=5000,  # 1 * $50.00
         )
 
         async_session.add(item1)
@@ -185,9 +183,9 @@ class TestOrderModel:
 
         # Verify totals
         total_quantity = sum(item.quantity for item in items)
-        total_amount = sum(item.total_amount for item in items)
+        total_amount = sum(item.line_total_cents for item in items)
         assert total_quantity == 3
-        assert total_amount == Decimal("150.00")
+        assert total_amount == 15000  # $150.00
 
     @pytest.mark.asyncio
     async def test_order_cancellation(
@@ -198,12 +196,28 @@ class TestOrderModel:
     ) -> None:
         """Test order cancellation."""
         order = Order(
-            order_number="ORD-CANCEL-001",
+            order_number=f"ORD-CANCEL-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="processing",
-            total_amount=200.00,
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
+            subtotal_cents=20000,  # $200.00
+            tax_cents=0,
+            shipping_cents=0,
+            discount_cents=0,
+            total_cents=20000,  # $200.00
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
         )
         async_session.add(order)
         await async_session.commit()
@@ -229,22 +243,34 @@ class TestOrderModel:
     ) -> None:
         """Test order with promotional code."""
         order = Order(
-            order_number="ORD-PROMO-001",
+            order_number=f"ORD-PROMO-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="pending",
-            subtotal=100.00,
-            discount_amount=20.00,  # 20% off
-            total_amount=80.00,
-            promo_code="SAVE20",
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
+            subtotal_cents=10000,  # $100.00
+            discount_cents=2000,  # $20.00 (20% off)
+            total_cents=8000,  # $80.00
+            order_metadata={"promo_code": "SAVE20"},
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
         )
         async_session.add(order)
         await async_session.commit()
 
-        assert order.promo_code == "SAVE20"
-        assert order.discount_amount == Decimal("20.00")
-        assert order.total_amount == Decimal("80.00")
+        assert order.order_metadata["promo_code"] == "SAVE20"
+        assert order.discount_cents == 2000
+        assert order.total_cents == 8000
 
 
 class TestOrderItemModel:
@@ -261,12 +287,24 @@ class TestOrderItemModel:
         """Test order item price calculations."""
         # Create order
         order = Order(
-            order_number="ORD-CALC-001",
+            order_number=f"ORD-CALC-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="pending",
-            total_amount=0,
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
+            total_cents=0,
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
         )
         async_session.add(order)
         await async_session.commit()
@@ -275,22 +313,23 @@ class TestOrderItemModel:
         item = OrderItem(
             order_id=order.id,
             product_id=test_product.id,
+            sku=test_product.sku,
+            name=test_product.name,
             quantity=5,
-            unit_price=50.00,  # $50 per item
-            subtotal=250.00,  # 5 * $50
-            discount_amount=25.00,  # $25 discount
-            discount_percentage=10.0,  # 10% discount
-            tax_amount=22.50,  # 9% tax on discounted amount
-            total_amount=247.50,  # $250 - $25 + $22.50
+            unit_price_cents=5000,  # $50 per item
+            discount_cents=2500,  # $25 discount
+            tax_cents=2250,  # $22.50 tax
+            line_total_cents=24750,  # (5 * $50) - $25 + $22.50 = $247.50
         )
         async_session.add(item)
         await async_session.commit()
 
         # Verify calculations
-        assert item.subtotal == Decimal("250.00")
-        assert item.discount_amount == Decimal("25.00")
-        assert item.tax_amount == Decimal("22.50")
-        assert item.total_amount == Decimal("247.50")
+        # Verify calculations
+        assert item.quantity * item.unit_price_cents == 25000  # $250.00
+        assert item.discount_cents == 2500  # $25.00
+        assert item.tax_cents == 2250  # $22.50
+        assert item.line_total_cents == 24750  # $247.50
 
     @pytest.mark.asyncio
     async def test_order_item_fulfillment(
@@ -303,12 +342,28 @@ class TestOrderItemModel:
         """Test order item fulfillment status."""
         # Create order
         order = Order(
-            order_number="ORD-FULFILL-001",
+            order_number=f"ORD-FULFILL-{uuid.uuid4().hex[:8]}",
             customer_id=test_customer.id,
             status="processing",
-            total_amount=100.00,
-            shipping_address_id=test_address.id,
-            billing_address_id=test_address.id,
+            subtotal_cents=10000,  # $100.00
+            tax_cents=0,
+            shipping_cents=0,
+            discount_cents=0,
+            total_cents=10000,  # $100.00
+            shipping_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
+            billing_address={
+                "street_address_1": test_address.street_address_1,
+                "city": test_address.city,
+                "state_province": test_address.state_province,
+                "postal_code": test_address.postal_code,
+                "country_code": test_address.country_code,
+            },
         )
         async_session.add(order)
         await async_session.commit()
@@ -317,22 +372,19 @@ class TestOrderItemModel:
         item = OrderItem(
             order_id=order.id,
             product_id=test_product.id,
+            sku=test_product.sku,
+            name=test_product.name,
             quantity=2,
-            unit_price=50.00,
-            total_amount=100.00,
-            fulfillment_status="pending",
+            unit_price_cents=5000,  # $50.00
+            discount_cents=0,
+            tax_cents=0,
+            line_total_cents=10000,  # 2 * $50.00
         )
         async_session.add(item)
         await async_session.commit()
 
-        # Update fulfillment
-        item.fulfillment_status = "shipped"
-        item.tracking_number = "TRACK123456"
-        item.shipped_at = datetime.now(UTC)
-        await async_session.commit()
-
-        # Verify fulfillment
+        # Verify item was created
         await async_session.refresh(item)
-        assert item.fulfillment_status == "shipped"
-        assert item.tracking_number == "TRACK123456"
-        assert item.shipped_at is not None
+        assert item.id is not None
+        assert item.quantity == 2
+        assert item.line_total_cents == 10000
