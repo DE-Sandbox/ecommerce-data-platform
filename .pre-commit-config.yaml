@@ -72,7 +72,7 @@ repos:
       - id: mypy
         name: mypy (src)
         files: ^src/
-        additional_dependencies: [types-pyyaml]
+        additional_dependencies: [types-pyyaml, fastapi, pydantic, structlog, sqlalchemy, asyncpg, starlette]
         args: [
           --python-version=3.13,
           --warn-return-any,
@@ -91,7 +91,7 @@ repos:
       - id: mypy
         name: mypy (tests)
         files: ^tests/
-        additional_dependencies: [types-pyyaml, pytest]
+        additional_dependencies: [types-pyyaml, pytest, fastapi, httpx]
         args: [
           --python-version=3.13,
           --warn-return-any,

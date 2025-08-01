@@ -314,3 +314,46 @@ def is_feature_enabled(feature_name: str) -> bool:
     """Check if a feature flag is enabled."""
     result = get_config().get("application", f"features.{feature_name}", False)
     return bool(result)
+
+
+class Settings:
+    """Application settings for FastAPI."""
+
+    def __init__(self) -> None:
+        """Initialize settings from configuration."""
+        # Load database config
+        db_config = load_database_config()
+
+        # Database settings
+        self.database_url = get_database_url()
+        pool_size = db_config.get("pool_size", 10)
+        self.database_pool_size = (
+            int(pool_size) if isinstance(pool_size, int | str) else 10
+        )
+        pool_overflow = db_config.get("pool_max_overflow", 20)
+        self.database_pool_max_overflow = (
+            int(pool_overflow) if isinstance(pool_overflow, int | str) else 20
+        )
+
+        # Application settings
+        app_config = load_application_config()
+        self.debug = bool(app_config.get("debug", False))
+        self.api_title = str(
+            app_config.get("api_title", "E-commerce Data Platform API")
+        )
+        self.api_version = str(app_config.get("api_version", "1.0.0"))
+
+        # Environment
+        self.environment = os.environ.get("APP_ENV", "development")
+
+        # CORS settings
+        self.cors_origins = app_config.get("cors_origins", ["*"])
+
+        # API settings
+        self.api_prefix = str(app_config.get("api_prefix", "/api"))
+
+
+@cache
+def get_settings() -> Settings:
+    """Get cached settings instance."""
+    return Settings()

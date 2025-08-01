@@ -24,6 +24,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "greenlet>=3.2.3",
     "alembic-utils>=0.8.8",
+    "structlog>=25.1.0",
 ]
 
 [project.optional-dependencies]
@@ -43,6 +44,7 @@ dev = [
     "ruff>=0.8.0",
     "pip-audit>=2.8.0",
     "types-pyyaml>=6.0.12.20250516",
+    "httpx>=0.28.0",
 ]
 
 [tool.black]
@@ -86,6 +88,7 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 show_error_codes = true
+plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
@@ -98,6 +101,8 @@ module = [
     "alembic_utils.*",
     "pydantic.*",
     "email_validator.*",
+    "starlette.*",
+    "structlog.*",
 ]
 ignore_missing_imports = true
 
