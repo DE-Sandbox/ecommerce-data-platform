@@ -138,8 +138,11 @@ services:
       DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB:-dagster}
       DAGSTER_POSTGRES_HOST: postgres
       DAGSTER_POSTGRES_PORT: 5432
+      DAGSTER_HOME: /opt/dagster/dagster_home
     volumes:
       - ./src/pipelines:/opt/dagster/app
+      - dagster_home:/opt/dagster/dagster_home
+    working_dir: /opt/dagster/app
     networks:
       - ecommerce-network
     depends_on:
@@ -158,8 +161,11 @@ services:
       DAGSTER_POSTGRES_DB: ${DAGSTER_POSTGRES_DB:-dagster}
       DAGSTER_POSTGRES_HOST: postgres
       DAGSTER_POSTGRES_PORT: 5432
+      DAGSTER_HOME: /opt/dagster/dagster_home
     volumes:
       - ./src/pipelines:/opt/dagster/app
+      - dagster_home:/opt/dagster/dagster_home
+    working_dir: /opt/dagster/app
     networks:
       - ecommerce-network
     depends_on:
@@ -176,3 +182,4 @@ volumes:
   redpanda_data:
   redis_data:
   minio_data:
+  dagster_home:
